@@ -14,7 +14,8 @@
 		"dataloader": "^1.4.0",
 		"express": "^4.16.2",
 		"flat": "^4.0.0",
-		"mongoose": "^5.1.4"
+		"mongoose": "^5.1.4",
+		"cron-job": "^1.0.3"
 	},
 	"devDependencies": {
 		"eslint": "^3.18.0",
