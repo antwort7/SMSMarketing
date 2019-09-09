@@ -1,0 +1,6 @@
+{
+    "description": "El token dado es inválido",
+    "schema": {
+        "$ref": "./error.json"
+    }
+}

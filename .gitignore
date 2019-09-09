@@ -1,0 +1,12 @@
+node_modules/
+.env
+.DS_Store
+coverage/
+out/
+build/
+database/
+zip/
+tmp/
+redis/
+coverage/
+.nyc_output/

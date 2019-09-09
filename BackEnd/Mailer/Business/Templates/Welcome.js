@@ -1,0 +1,588 @@
+module.exports = ({ reference, name, lastName, position }) => {
+	const domains = {
+		dev: 'http://localhost:3000',
+		production: 'https://tappller.proresultados.com.co',
+		test: 'https://d1dof4t50webhq.proresultados.com.co',
+	}
+	const domain = domains[process.env.STAGE] || domains.Test
+    return /* html */`
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <!-- saved from url=(0090)https://s3.amazonaws.com/trazabilidad-assets-1wijg2rxc8i0n/email/newUserProresultados.html -->
+    <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <meta http-equiv="x-ua-compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>*|MC:SUBJECT|*</title>
+        <style type="text/css">
+            p {
+                margin: 1em 0;
+                padding: 0;
+            }
+            table {
+                border-collapse: collapse;
+            }
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6 {
+                display: block;
+                margin: 0;
+                padding: 0;
+            }
+            img,
+            a img {
+                border: 0;
+                height: auto;
+                outline: none;
+                text-decoration: none;
+            }
+            body,
+            #bodyTable,
+            #bodyCell {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+            #outlook a {
+                padding: 0;
+            }
+            img {
+                -ms-interpolation-mode: bicubic;
+            }
+            table {
+                mso-table-lspace: 0;
+                mso-table-rspace: 0;
+            }
+            .ReadMsgBody {
+                width: 100%;
+            }
+            .ExternalClass {
+                width: 100%;
+            }
+            p,
+            a,
+            li,
+            td,
+            blockquote {
+                mso-line-height-rule: exactly;
+            }
+            a[href^=tel],
+            a[href^=sms] {
+                color: inherit;
+                cursor: default;
+                text-decoration: none;
+            }
+            p,
+            a,
+            li,
+            td,
+            body,
+            table,
+            blockquote {
+                -ms-text-size-adjust: 100%;
+                -webkit-text-size-adjust: 100%;
+            }
+            .ExternalClass,
+            .ExternalClass p,
+            .ExternalClass td,
+            .ExternalClass div,
+            .ExternalClass span,
+            .ExternalClass font {
+                line-height: 100%;
+            }
+            a[x-apple-data-detectors] {
+                color: inherit !important;
+                text-decoration: none !important;
+                font-size: inherit !important;
+                font-family: inherit !important;
+                font-weight: inherit !important;
+                line-height: inherit !important;
+            }
+            #bodyCell {
+                padding: 9px;
+            }
+            .templateImage {
+                height: auto;
+                max-width: 564px;
+            }
+            .templateContainer {
+                max-width: 600px !important;
+            }
+            #templatePreheader {
+                padding-right: 9px;
+                padding-left: 9px;
+            }
+            #templatePreheader .columnContainer td {
+                padding: 0 9px;
+            }
+            #footerContent {
+                padding-bottom: 18px;
+            }
+            #templateHeader,
+            #templateBody,
+            #templateFooter {
+                padding-right: 18px;
+                padding-left: 18px;
+            }
+            .text-center {
+                text-align: center;
+            }
+            body,
+            #bodyTable {
+                background-color: #2E5BFF;
+            }
+            .templateContainer {
+                border: 0;
+                border: 2px solid #ccc;
+            }
+            h1 {
+                color: #2E384D;
+                font-family: Helvetica;
+                font-size: 20px;
+                font-style: normal;
+                font-weight: bold;
+                line-height: 110%;
+                letter-spacing: normal;
+                text-align: left;
+                margin-top: 20px;
+            }
+            h2 {
+                color: #0C0C0C;
+                font-family: Helvetica;
+                font-size: 28px;
+                font-style: normal;
+                font-weight: bold;
+                line-height: 150%;
+                letter-spacing: normal;
+                text-align: left;
+            }
+            h3 {
+                color: #444444;
+                font-family: Helvetica;
+                font-size: 22px;
+                font-style: normal;
+                font-weight: bold;
+                line-height: 150%;
+                letter-spacing: normal;
+                text-align: left;
+            }
+            h4 {
+                color: #999999;
+                font-family: Georgia;
+                font-size: 20px;
+                font-style: italic;
+                font-weight: normal;
+                line-height: 150%;
+                letter-spacing: normal;
+                text-align: left;
+            }
+            #templatePreheader {
+                background-color: #ffffff;
+                background-image: none;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: cover;
+                border-top: 0;
+                border-bottom: 0;
+                padding-top: 9px;
+                padding-bottom: 9px;
+            }
+            #templatePreheader,
+            #templatePreheader p {
+                color: #2E384D;
+                font-family: Helvetica;
+                font-size: 12px;
+                line-height: 150%;
+                text-align: left;
+            }
+    
+            #templatePreheader a,
+            #templatePreheader p a {
+                color: #2E384D;
+                font-weight: normal;
+                text-decoration: underline;
+            }
+            #templateHeader {
+                background-color: #FFFFFF;
+                background-image: none;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: cover;
+                border-top: 0;
+                border-bottom: 0;
+                padding-top: 18px;
+                padding-bottom: 0;
+            }
+    
+            #templateHeader,
+            #templateHeader p {
+                color: #2E384D;
+                font-family: Helvetica;
+                font-size: 16px;
+                line-height: 150%;
+                text-align: left;
+            }
+            #templateHeader a,
+            #templateHeader p a {
+                color: #237A91;
+                font-weight: normal;
+                text-decoration: underline;
+            }
+            #templateBody {
+                background-color: #FFFFFF;
+                background-image: none;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: cover;
+                border-top: 0;
+                border-bottom: 2px solid #EAEAEA;
+                padding-top: 0;
+                padding-bottom: 9px;
+            }
+    
+            #templateBody,
+            #templateBody p {
+                color: #2E384D;
+                font-family: Helvetica;
+                font-size: 16px;
+                line-height: 150%;
+                text-align: left;
+                margin-top:0;
+            }
+    
+            #templateBody a,
+            #templateBody p a {
+               
+                color: #237A91;
+               
+                font-weight: normal;
+               
+                text-decoration: underline;
+            }
+            #templateFooter {
+                background-color: #FAFAFA;
+                background-image: none;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: cover;
+                border-top: 0;
+                border-bottom: 0;
+                padding-top: 36px;
+                padding-bottom: 9px;
+            }
+            #socialBar {
+               
+                background-color: #333333;
+               
+                border: 0;
+               
+                padding: 18px;
+            }
+            #socialBar,
+            #socialBar p {
+                color: #FFFFFF;
+                font-family: Helvetica;
+                font-size: 12px;
+                line-height: 150%;
+                text-align: center;
+            }
+            #socialBar a,
+            #socialBar p a {
+               
+                color: #FFFFFF;
+               
+                font-weight: normal;
+               
+                text-decoration: underline;
+            }
+            #footerContent,
+            #footerContent p {
+               
+                color: #656565;
+               
+                font-family: Helvetica;
+               
+                font-size: 12px;
+               
+                line-height: 150%;
+               
+                text-align: center;
+            }
+            #footerContent a,
+            #footerContent p a {
+                color: #656565;
+                font-weight: normal;
+                text-decoration: underline;
+            }
+            #utilityBar {
+               
+                background-color: #FAFAFA;
+               
+                border: 0;
+               
+                padding-top: 9px;
+               
+                padding-bottom: 9px;
+            }
+            #utilityBar,
+            #utilityBar p {
+                color: #656565;
+                font-family: Helvetica;
+                font-size: 12px;
+                line-height: 150%;
+                text-align: center;
+            }
+    
+            #utilityBar a,
+            #utilityBar p a {
+                color: #656565;
+                font-weight: normal;
+                text-decoration: underline;
+            }
+            
+            #btn a {
+                color: #fff;
+                text-decoration: none;
+                font-size: 15px;
+                font-weight: bold;
+            }
+    
+            @media only screen and (max-width: 480px) {
+                body,
+                table,
+                td,
+                p,
+                a,
+                li,
+                blockquote {
+                    -webkit-text-size-adjust: none !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                body {
+                    width: 100% !important;
+                    min-width: 100% !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                .templateImage {
+                    width: 100% !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                .columnContainer {
+                    max-width: 100% !important;
+                    width: 100% !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                .mobileHide {
+                    display: none;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                .utilityLink {
+                    display: block;
+                    padding: 9px 0;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                h1 {
+                    font-size: 22px !important;
+                    line-height: 175% !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                h2 {
+                    font-size: 20px !important;
+                    line-height: 175% !important;
+                }
+    
+            }
+    
+            @media only screen and (max-width: 480px) {
+                h3 {
+                    font-size: 18px !important;
+                    line-height: 175% !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                h4 {
+                    font-size: 16px !important;
+                    line-height: 175% !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                #templatePreheader {
+                    display: block !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                #templatePreheader,
+                #templatePreheader p {
+                    font-size: 14px !important;
+                   
+                    line-height: 150% !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                #templateHeader,
+                #templateHeader p {
+                   
+                    font-size: 16px !important;
+                   
+                    line-height: 150% !important;
+                }
+            }
+    
+            @media only screen and (max-width: 480px) {
+                #templateBody,
+                #templateBody p {
+                   
+                    font-size: 16px !important;
+                   
+                    line-height: 150% !important;
+                }
+    
+            }
+    
+            @media only screen and (max-width: 480px) {
+                #templateFooter,
+                #templateFooter p {
+                   
+                    font-size: 14px !important;
+                   
+                    line-height: 150% !important;
+                }
+    
+            }
+    
+            @media only screen and (max-width: 480px) {
+                #socialBar,
+                #socialBar p {
+                   
+                    font-size: 14px !important;
+                   
+                    line-height: 150% !important;
+                }
+    
+            }
+    
+            @media only screen and (max-width: 480px) {
+                #utilityBar,
+                #utilityBar p {
+                   
+                    font-size: 14px !important;
+                   
+                    line-height: 150% !important;
+                }
+                .body_content .button a {
+                    background: #2E5BFF;
+                    color: #fff;
+                }
+            }
+            
+            .logo{
+                margin-left:25px;
+            }
+            
+            #templateBody p { 
+                margin-bottom:40px;
+            }
+    
+            @media only screen and (min-width: 480px) {
+                #templateBody {
+                    padding-left: 50px;
+                    padding-right: 50px;
+                }
+                .logo{
+                    margin-left:50px;
+                }
+            }
+            
+        </style>
+    </head>
+    
+    <body>
+            <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" id="bodyTable" style="height:100%;">
+                <tbody><tr>
+                    <td align="center" valign="top" id="bodyCell">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" class="templateContainer">
+                            <tbody><tr>
+                                <td valign="top" align="center" id="templatePreheader">
+                                    <div class="logo" style="width: 153px;  margin-top: 60px; margin-right: auto;">
+                                        <img style="width:100%; height:auto;" src="https://s3.amazonaws.com/trazabilidad-assets-1wijg2rxc8i0n/img/proresultados_logo%402x.png" alt="">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td valign="top" align="center" id="templateBody">
+                                    <div class="body_content" style="padding:0 15px">
+                                        <h1>Bienvenid@</h1>
+                                        <p class="text-center">Queremos darte la bienvenida a
+                                            <strong>TAPPLLER</strong>, la plataforma donde podrás gestionar el servicio de mantenimiento de tu flota. Para empezar a utilizar nuestra plataforma te pedimos el favor completes el siguiente formulario.</p>
+                                    </div>
+                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                        <tbody><tr>
+                                            <td align="center">
+                                                <table border="0" cellspacing="0" cellpadding="0" style="margin-bottom:40px;">
+                                                    <tbody><tr>
+                                                        <td align="center" style="border-radius: 3px;" bgcolor="#2E5BFF">
+                                                            <div id="btn" style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; text-decoration: none;border-radius: 3px; padding: 12px 18px; border: 1px solid #2E5BFF; display: inline-block;">
+                                                                <a href="${domain}/signup?ref=${reference}&name=${name}&lastName=${lastName}&position=${position}" target="_blank">Continuar al registro</a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody></table>
+                                            </td>
+                                        </tr>
+                                    </tbody></table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td valign="top" id="templateFooter">
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    
+                                        <tbody><tr>
+                                            <td valign="top" id="footerContent">
+                                                <div>
+                                                    <em>Copyright © 2019, Todos los derechos reservados.</em>
+                                                    <br>
+                                                    <br>
+                                                    <strong>Soporte</strong>
+                                                    <br>soporte@proresultados.co
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td valign="top" id="utilityBar">
+                                                <div>
+                                                    <a href="https://s3.amazonaws.com/" class="utilityLink">Politicas de privacidad</a>
+                                                    <span class="mobileHide"> | </span>
+                                                    <a href="https://s3.amazonaws.com/" class="utilityLink">Politicas de uso</a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody></table>
+                                </td>
+                            </tr>
+                        </tbody></table>
+                    </td>
+                </tr>
+            </tbody></table>
+    </body></html>`
+}

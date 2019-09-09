@@ -1,0 +1,537 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Plip base resources
+Metadata: 
+    AWS::CloudFormation::Interface: 
+        ParameterGroups:
+        -   
+            Label:
+                default: "Api"
+            Parameters:
+                - ProjectName 
+                - Namespace
+        -   Label:
+                default: "MongoDB"
+            Parameters:
+                - MongoUri
+                - TestMongoUri
+        -   Label:
+                default: "ECS"
+            Parameters:
+                - VPC
+                - Subnets
+                - ClusterSize
+                - InstanceType
+        -   Label:
+                default: "Template"
+            Parameters:
+                - TemplateBucket
+
+        -   Label:
+                default: "Certificate"
+            Parameters:
+                - WilcardCertificate
+
+        ParameterLabels: 
+            ProjectName:
+                default: "Name"
+            Namespace:
+                default: "Dns namespace"
+            MongoUri:
+                default: "Mongo Uri"
+            TestMongoUri:
+                default: "Test Mongo Uri"
+            VPC: 
+                default: "ECS VPC"
+            Subnets:
+                default: "ECS Subnets"
+            ClusterSize:
+                default: "ECS Cluster Size"
+            InstanceType:
+                default: "ECS Instance Size"
+            TemplateBucket:
+                default: "Template S3"
+            WildcardCertificate:
+                default: "Arn Certificado"
+
+Parameters:
+    ProjectName:
+        Default: Plip
+        Type: String
+    Namespace:
+        Default: plip
+        Type: String
+        Description: Must be lowercase
+    MongoUri:
+        Type: String
+    TestMongoUri:
+        Type: String
+    VPC: 
+        Description: What Vpc to deploy to the EC2 cluster and the load balancer
+        Type: AWS::EC2::VPC::Id
+    Subnets:
+        Description: Choose which subnets the Application Load Balancer should be deployed to
+        Type: List<AWS::EC2::Subnet::Id>
+    ClusterSize:
+        Type: Number
+        Default: 2
+    InstanceType:
+        Type: String
+        Default: t2.micro
+        AllowedValues: 
+            [t2.micro, t2.small, t2.medium, t2.large, m3.medium, m3.large,
+            m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+            c4.large, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge, c3.large, c3.xlarge,
+            c3.2xlarge, c3.4xlarge, c3.8xlarge, r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge,
+            r3.8xlarge, i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge]
+        ConstraintDescription: Please choose a valid instance type.
+    TemplateBucket:
+        Type: String
+    KeyPair:
+        Description: The keypair for the ec2 instances
+        Type: AWS::EC2::KeyPair::KeyName
+
+    WildcardCertificate:
+        Description: The wildcard certificate
+        Type: String
+
+Resources:
+    #EC2 Cluster Configuration
+    SecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: EC2 resources security group
+            VpcId: !Ref VPC
+    
+    IngressFromSecurityGroup:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Ingress from other resources in the same security group
+            GroupId: !Ref SecurityGroup
+            IpProtocol: -1
+            SourceSecurityGroupId: !Ref SecurityGroup
+
+    #The global bucket for all of the cloudformation operations
+    Artifacts:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+
+    Assets:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+
+    #The global codebuild service role
+    CodeBuildServiceRole:
+        Type: AWS::IAM::Role
+        Properties:
+            Path: /
+            AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                - 
+                    Effect: Allow
+                    Principal:
+                        Service: codebuild.amazonaws.com
+                    Action: sts:AssumeRole
+            Policies:
+                - 
+                    PolicyName: root
+                    PolicyDocument:
+                        Version: 2012-10-17
+                        Statement:
+                        - 
+                            Resource: "*"
+                            Effect: Allow
+                            Action:
+                            - logs:CreateLogGroup
+                            - logs:CreateLogStream
+                            - logs:PutLogEvents
+                            - ecr:GetAuthorizationToken
+                        - 
+                            Resource: !Sub arn:aws:s3:::${Artifacts}/*
+                            Effect: Allow
+                            Action:
+                            - s3:GetObject
+                            - s3:PutObject
+                            - s3:GetObjectVersion
+                        - 
+                            Resource: "*"
+                            Effect: Allow
+                            Action:
+                            - ecr:GetDownloadUrlForLayer
+                            - ecr:BatchGetImage
+                            - ecr:BatchCheckLayerAvailability
+                            - ecr:PutImage
+                            - ecr:InitiateLayerUpload
+                            - ecr:UploadLayerPart
+                            - ecr:CompleteLayerUpload
+
+    #The global codepipeline service role
+    CodePipelineServiceRole:
+        Type: AWS::IAM::Role
+        Properties:
+            Path: /
+            AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                - 
+                    Effect: Allow
+                    Principal:
+                        Service: codepipeline.amazonaws.com
+                    Action: sts:AssumeRole
+            Policies:
+                - 
+                    PolicyName: root
+                    PolicyDocument:
+                        Version: 2012-10-17
+                        Statement:
+                        - 
+                            Resource:
+                                - !Sub arn:aws:s3:::${Artifacts}/*
+                            Effect: Allow
+                            Action:
+                            - s3:PutObject
+                            - s3:GetObject
+                            - s3:GetObjectVersion
+                            - s3:GetBucketVersioning
+                        - 
+                            Resource: "*"
+                            Effect: Allow
+                            Action:
+                            - codebuild:*
+                            - iam:*
+                            - cloudformation:*
+                            - lambda:*
+                            - ecs:DescribeServices
+                            - ecs:DescribeTaskDefinition
+                            - ecs:DescribeTasks
+                            - ecs:ListTasks
+                            - ecs:RegisterTaskDefinition
+                            - ecs:UpdateService
+
+    #The global cloudformation role
+    CloudformationServiceRole:
+        Type: AWS::IAM::Role
+        Properties:
+            Path: /
+            AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                - 
+                    Effect: Allow
+                    Principal:
+                        Service: cloudformation.amazonaws.com
+                    Action: sts:AssumeRole
+            Policies:
+                - 
+                    PolicyName: root
+                    PolicyDocument:
+                        Version: 2012-10-17
+                        Statement:
+                        - 
+                            Resource: "*"
+                            Effect: Allow
+                            Action: "*"
+    #Cognito resources
+    CognitoPoolProd:
+        Type: AWS::Cognito::UserPool
+        Properties:
+            AutoVerifiedAttributes:
+                - email
+            UsernameAttributes:
+                - email
+                - phone_number
+            DeviceConfiguration:
+                DeviceOnlyRememberedOnUserPrompt: true
+            Policies:
+                PasswordPolicy:
+                    MinimumLength: 10
+                    RequireLowercase: true
+                    RequireNumbers: true
+                    RequireSymbols: false
+                    RequireUppercase: true
+            UserPoolName: 
+                !Join 
+                    - ''
+                    - 
+                        - !Ref ProjectName
+                        - Users
+            Schema:
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: name
+                    Required: true
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: email
+                    Required: true
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: family_name
+                    Required: true
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: locale
+                    Required: false
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: phone_number
+                    Required: false
+                -
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: documentType
+                    Required: false
+                -
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: documentNumber
+                    Required: false
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: custom
+                    Required: false
+            UserPoolTags:
+                Client: !Ref ProjectName
+
+    #The testing cognito pool
+    CognitoPoolTest:
+        Type: AWS::Cognito::UserPool
+        Properties:
+            AutoVerifiedAttributes:
+                - email
+            UsernameAttributes:
+                - email
+                - phone_number
+            DeviceConfiguration:
+                DeviceOnlyRememberedOnUserPrompt: true
+            Policies:
+                PasswordPolicy:
+                    MinimumLength: 10
+                    RequireLowercase: true
+                    RequireNumbers: true
+                    RequireSymbols: false
+                    RequireUppercase: true
+            UserPoolName:
+                !Join 
+                    - ''
+                    - 
+                        - !Ref ProjectName
+                        - UsersTest
+            Schema:
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: name
+                    Required: true
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: email
+                    Required: true
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: family_name
+                    Required: false
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: phone_number
+                    Required: false
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: locale
+                    Required: false
+                -
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: documentType
+                    Required: false
+                -
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: documentNumber
+                    Required: false
+                - 
+                    AttributeDataType: String
+                    Mutable: true
+                    Name: custom
+                    Required: false
+            UserPoolTags:
+                Client: !Ref ProjectName
+    
+    WebClientProd:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            ClientName: web
+            ExplicitAuthFlows:
+                - ADMIN_NO_SRP_AUTH
+            GenerateSecret: false
+            RefreshTokenValidity: 30
+            UserPoolId: !Ref CognitoPoolProd
+            ReadAttributes:
+                - name
+                - email
+                - family_name
+                - phone_number
+                - locale
+                - custom:documentType
+                - custom:documentNumber
+                - custom:custom
+            WriteAttributes:
+                - name
+                - email
+                - family_name
+                - phone_number
+                - locale
+                - custom:documentType
+                - custom:documentNumber
+                - custom:custom
+
+    #The testing client in the testing pool
+    #Read and Write attributes can be changed
+    WebClientTest:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            ClientName: web
+            ExplicitAuthFlows:
+                - ADMIN_NO_SRP_AUTH
+            GenerateSecret: false
+            RefreshTokenValidity: 30
+            UserPoolId: !Ref CognitoPoolTest
+            ReadAttributes:
+                - name
+                - email
+                - family_name
+                - phone_number
+                - locale
+                - custom:documentType
+                - custom:documentNumber
+                - custom:custom
+            WriteAttributes:
+                - name
+                - email
+                - family_name
+                - phone_number
+                - locale
+                - custom:documentType
+                - custom:documentNumber
+                - custom:custom
+    #The administrator group for production
+    AdministratorGroupProd:
+        Type: AWS::Cognito::UserPoolGroup
+        Properties:
+            Description: Group for administrator users
+            GroupName: Administrator
+            Precedence: 0
+            UserPoolId: !Ref CognitoPoolProd
+
+    #The administrator group for testing
+    AdministratorGroupTest:
+        Type: AWS::Cognito::UserPoolGroup
+        Properties:
+            Description: Group for administrator users
+            GroupName: Administrator
+            Precedence: 0
+            UserPoolId: !Ref CognitoPoolTest
+
+    #PrivateDNSNamespace
+    DNSNamespace:
+        Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+        Properties:
+            Vpc: !Ref VPC
+            Name: !Ref Namespace
+    
+    #ECS
+    ECS:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: !Sub
+                - https://s3.amazonaws.com/${Bucket}/cloudformation/ecs.yml
+                - { Bucket: !Ref TemplateBucket} 
+            Parameters: 
+                VPC: !Ref VPC
+                Subnets:
+                    !Join
+                        - ','
+                        - !Ref Subnets
+                ClusterSize: !Ref ClusterSize
+                ProjectSecurityGroup: !Ref SecurityGroup
+                InstanceType: !Ref InstanceType
+                KeyPair: !Ref KeyPair
+                Certificate: !Ref WildcardCertificate
+
+Outputs:
+    Namespace:
+        Value: !Ref DNSNamespace
+        Export:
+            Name: Namespace
+    ResourcesBucket:
+        Value: !Ref Artifacts
+        Export:
+            Name: Bucket
+    CodeBuildServiceRole:
+        Value: !Ref CodeBuildServiceRole
+        Export:
+            Name: CodeBuildServiceRole
+    
+    CodePipelineServiceRoleArn:
+        Value: !GetAtt CodePipelineServiceRole.Arn
+        Export:
+            Name: CodePipelineServiceRoleArn
+
+    CloudformationServiceRoleArn:
+        Value: !GetAtt CloudformationServiceRole.Arn
+        Export:
+            Name: CloudformationServiceRoleArn
+    MongoDB:
+        Value: !Ref MongoUri
+        Export:
+            Name: MongoDB
+    TestMongoDB:
+        Value: !Ref TestMongoUri
+        Export:
+            Name: TestMongoDB
+    SecurityGroup:
+        Value: !Ref SecurityGroup
+        Export:
+            Name: MainSecurityGroup
+    Subnets: 
+        Value:
+            !Join
+                - ','
+                - !Ref Subnets
+        Export:
+            Name: Subnets
+    VPC: 
+        Value: !Ref VPC
+        Export:
+            Name: VpcId
+    CognitoPoolTest:
+        Value: !Ref CognitoPoolTest
+        Export:
+            Name: CognitoPoolTest
+    
+    CognitoPoolProd:
+        Value: !Ref CognitoPoolProd
+        Export:
+            Name: CognitoPoolProd
+    
+    ClientIdProd:
+        Description: The client id for production
+        Value: !Ref WebClientProd
+        Export:
+            Name: ClientIdProd
+
+    ClientIdTest:
+        Description: The client id for testing
+        Value: !Ref WebClientTest
+        Export:
+            Name: ClientIdTest

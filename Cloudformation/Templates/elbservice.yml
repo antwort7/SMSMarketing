@@ -1,0 +1,396 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a service on AWS Fargate, hosted in a public subnet, and accessible via a public load balancer.
+Parameters:
+    ServiceName:
+        Type: String
+        Description: The service name
+    RepositoryName:
+        Type: String
+        Description: The repository name
+    TaskDefinition:
+        Type: String
+        Description: The service task definition
+    TestTaskDefinition:
+        Type: String
+        Description: The service task definition
+    Priority:
+        Type: Number
+        Default: 1
+        Description: The priority for the routing rule added to the load balancer.
+                    This only applies if your have multiple services which have been
+                    assigned to different paths on the load balancer.
+    TestPriority:
+        Type: Number
+        Default: 2
+    WSPriority:
+        Type: Number
+        Default: 3
+    TestWSPriority:
+        Type: Number
+        Default: 4
+    ServiceCount:
+        Type: Number
+        Default: 2
+        Description: How many copies of the service task to run
+    Path:
+        Type: String
+    TestPath:
+        Type: String
+    WebsocketPath:
+        Type: String
+    TestWebsocketPath:
+        Type: String
+    HealthCheckPath:
+        Type: String
+    GitHubRepo:
+        Type: String
+
+    GitHubBranch:
+        Type: String
+
+    GitHubToken:
+        Type: String
+        NoEcho: true
+        Description: https://github.com/settings/tokens
+    GitHubUser:
+        Type: String
+    BuildPath:
+        Type: String
+
+Resources:
+    Repository:
+        Type: AWS::ECR::Repository
+        DeletionPolicy: Retain
+        Properties: 
+            RepositoryName: !Ref RepositoryName
+
+    ServiceTargetGroup:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties:
+            HealthCheckIntervalSeconds: 6
+            HealthCheckPath: !Ref HealthCheckPath
+            HealthCheckProtocol: HTTP
+            HealthCheckTimeoutSeconds: 5
+            HealthyThresholdCount: 2
+            Name: !Ref ServiceName
+            Port: 3000
+            Protocol: HTTP
+            UnhealthyThresholdCount: 2
+            TargetType: instance
+            VpcId: !ImportValue VpcId
+            TargetGroupAttributes:
+                - 
+                    Key: stickiness.enabled
+                    Value: 'true'
+
+    TestServiceTargetGroup:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties:
+            HealthCheckIntervalSeconds: 6
+            HealthCheckPath: !Ref HealthCheckPath
+            HealthCheckProtocol: HTTP
+            HealthCheckTimeoutSeconds: 5
+            HealthyThresholdCount: 2
+            Name: !Join
+                - ''
+                - 
+                    -  !Ref ServiceName
+                    -  Test
+            Port: 3000
+            Protocol: HTTP
+            UnhealthyThresholdCount: 2
+            TargetType: instance
+            VpcId: !ImportValue VpcId
+            TargetGroupAttributes:
+                - 
+                    Key: stickiness.enabled
+                    Value: 'true'
+
+    LoadBalancerRule:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            Actions:
+                - 
+                    TargetGroupArn: !Ref ServiceTargetGroup
+                    Type: forward
+            Conditions:
+                - 
+                    Field: path-pattern
+                    Values: 
+                        - !Ref Path
+            ListenerArn: !ImportValue LoadBalancerListener
+            Priority: !Ref Priority
+
+    LoadBalancerRuleWS:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            Actions:
+                - 
+                    TargetGroupArn: !Ref ServiceTargetGroup
+                    Type: forward
+            Conditions:
+                - 
+                    Field: path-pattern
+                    Values: 
+                        - !Ref WebsocketPath
+            ListenerArn: !ImportValue LoadBalancerListener
+            Priority: !Ref WSPriority
+
+    TestLoadBalancerRule:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            Actions:
+                - 
+                    TargetGroupArn: !Ref TestServiceTargetGroup
+                    Type: forward
+            Conditions:
+                - 
+                    Field: path-pattern
+                    Values: 
+                        - !Ref TestPath
+            ListenerArn: !ImportValue LoadBalancerListener
+            Priority: !Ref TestPriority
+    
+    TestLoadBalancerRuleWS:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            Actions:
+                - 
+                    TargetGroupArn: !Ref TestServiceTargetGroup
+                    Type: forward
+            Conditions:
+                - 
+                    Field: path-pattern
+                    Values: 
+                        - !Ref TestWebsocketPath
+            ListenerArn: !ImportValue LoadBalancerListener
+            Priority: !Ref TestWSPriority
+
+    Service:
+        Type: AWS::ECS::Service
+        DependsOn: LoadBalancerRule
+        Properties:
+            ServiceName: !Ref ServiceName
+            Cluster: !ImportValue ECSClusterName
+            DeploymentConfiguration:
+                MaximumPercent: 100
+                MinimumHealthyPercent: 0
+            DesiredCount: !Ref ServiceCount
+            TaskDefinition: !Ref TaskDefinition
+            LaunchType: EC2
+            Role: !ImportValue ECSContainerRole
+            LoadBalancers:
+                - 
+                    ContainerName: !Ref ServiceName
+                    ContainerPort: 3000
+                    TargetGroupArn: !Ref ServiceTargetGroup
+    
+    TestService:
+        Type: AWS::ECS::Service
+        DependsOn: TestLoadBalancerRule
+        Properties:
+            ServiceName: !Ref ServiceName
+            Cluster: !ImportValue TestECSClusterName
+            DeploymentConfiguration:
+                MaximumPercent: 100
+                MinimumHealthyPercent: 0
+            DesiredCount: 0
+            TaskDefinition: !Ref TestTaskDefinition
+            LaunchType: EC2
+            Role: !ImportValue ECSContainerRole
+            LoadBalancers:
+                - 
+                    ContainerName: !Ref ServiceName
+                    ContainerPort: 3000
+                    TargetGroupArn: !Ref TestServiceTargetGroup
+    
+    ServiceBuild:
+        Type: AWS::CodeBuild::Project
+        Properties:
+            Artifacts:
+                Type: CODEPIPELINE
+            Source:
+                Type: CODEPIPELINE
+                BuildSpec: |
+                    version: 0.2
+                    phases:
+                        pre_build:
+                            commands:
+                                - $(aws ecr get-login --no-include-email)
+                                - TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
+                                - IMAGE_URI="${REPOSITORY_URI}:${TAG}"
+                                - LATEST_IMAGE_URI="${REPOSITORY_URI}:latest"
+                        build:
+                            commands:
+                                - docker build --tag "$IMAGE_URI" --tag "$LATEST_IMAGE_URI" $BUILD_PATH
+                        post_build:
+                            commands:
+                                - docker push "$IMAGE_URI"
+                                - docker push "$LATEST_IMAGE_URI"
+                                - printf '[{"name":"%s","imageUri":"%s"}]' "$SERVICE_NAME" "$IMAGE_URI" > prod.json
+                                - printf '[{"name":"%s","imageUri":"%s"}]' "$SERVICE_NAME" "$LATEST_IMAGE_URI" > test.json
+                    artifacts:
+                        files: 
+                            - prod.json
+                            - test.json
+
+            Environment:
+                ComputeType: BUILD_GENERAL1_SMALL
+                Image: aws/codebuild/docker:17.09.0
+                Type: LINUX_CONTAINER
+                EnvironmentVariables:
+                -
+                    Name: AWS_DEFAULT_REGION
+                    Value: !Ref AWS::Region
+                - 
+                    Name: REPOSITORY_URI
+                    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}
+                -
+                    Name: SERVICE_NAME
+                    Value: !Ref ServiceName
+                -   
+                    Name: BUILD_PATH
+                    Value: !Ref BuildPath
+            Name: !Join
+                - '-'
+                - 
+                    -  !Ref ServiceName
+                    -  Build
+            Cache: 
+                Type: S3
+                Location: 
+                    !Join
+                        - ''
+                        - 
+                            -  !ImportValue Bucket
+                            -  !Join
+                                - '/'
+                                - 
+                                    - ''
+                                    - build
+                                    - !Ref ServiceName
+            ServiceRole: !ImportValue CodeBuildServiceRole
+
+    Pipeline:
+        Type: AWS::CodePipeline::Pipeline
+        Properties:
+            RoleArn: !ImportValue CodePipelineServiceRoleArn
+            RestartExecutionOnUpdate: false
+            ArtifactStore:
+                Type: S3
+                Location: !ImportValue Bucket
+            Stages:
+                -   #Retrieve the source code from cannedhead-services repository
+                    Name: Source
+                    Actions:
+                        - 
+                            Name: Source
+                            ActionTypeId:
+                                Category: Source
+                                Owner: ThirdParty
+                                Version: 1
+                                Provider: GitHub
+                            Configuration:
+                                Owner: !Ref GitHubUser
+                                Repo: !Ref GitHubRepo
+                                Branch: !Ref GitHubBranch
+                                OAuthToken: !Ref GitHubToken
+                                PollForSourceChanges: false
+                            OutputArtifacts:
+                                - Name: src
+                            RunOrder: 1
+                -   #Build the authorizer and upload templates in parallel
+                    Name: Build
+                    Actions:
+                        - 
+                            Name: !Join
+                                - '-'
+                                - 
+                                    -  !Ref ServiceName
+                                    -  Build
+                            ActionTypeId:
+                                Category: Build
+                                Owner: AWS
+                                Version: 1
+                                Provider: CodeBuild
+                            Configuration:
+                                ProjectName: !Ref ServiceBuild
+                            InputArtifacts:
+                                - Name: src
+                            OutputArtifacts:
+                                - Name: !Join
+                                    - '-'
+                                    - 
+                                        -  !Ref ServiceName
+                                        -  Build
+                            RunOrder: 1
+                -  
+                    Name: DeployTest
+                    Actions:
+                        - 
+                            Name: !Join
+                                - '-'
+                                - 
+                                    -  !Ref ServiceName
+                                    -  Deploy
+                            ActionTypeId:
+                                Category: Deploy
+                                Owner: AWS
+                                Version: 1
+                                Provider: ECS
+                            Configuration:
+                                ClusterName: !ImportValue TestECSClusterName
+                                ServiceName: !Ref ServiceName
+                                FileName: test.json
+                            InputArtifacts:
+                                - Name: !Join
+                                    - '-'
+                                    - 
+                                        -  !Ref ServiceName
+                                        -  Build
+                            RunOrder: 1
+                - 
+                    Name: Approve
+                    Actions:
+                        - 
+                            InputArtifacts: []
+                            Name: SendToProduction
+                            ActionTypeId:
+                                Category: Approval
+                                Owner: AWS
+                                Version: '1'
+                                Provider: Manual
+                            OutputArtifacts: []
+                            Configuration: {}
+                            RunOrder: 1
+                -  
+                    Name: Deploy
+                    Actions:
+                        - 
+                            Name: !Join
+                                - '-'
+                                - 
+                                    -  !Ref ServiceName
+                                    -  Deploy
+                            ActionTypeId:
+                                Category: Deploy
+                                Owner: AWS
+                                Version: 1
+                                Provider: ECS
+                            Configuration:
+                                ClusterName: !ImportValue ECSClusterName
+                                ServiceName: !Ref ServiceName
+                                FileName: prod.json
+                            InputArtifacts:
+                                - Name: !Join
+                                    - '-'
+                                    - 
+                                        -  !Ref ServiceName
+                                        -  Build
+                            RunOrder: 1
+
+Outputs:
+    ServiceTargetGroup:
+        Value: !Ref ServiceTargetGroup
+    TestServiceTargetGroup:
+        Value: !Ref TestServiceTargetGroup

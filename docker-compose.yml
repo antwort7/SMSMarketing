@@ -1,0 +1,78 @@
+version: '3.6'
+
+volumes:
+  gateway_modules:
+  companies_modules:
+  keys_modules:
+  invoices_modules:
+
+services:
+  gateway:
+    build: 
+      context: .
+      dockerfile: ./BackEnd/Gateway/Dockerfile.dev
+    volumes:
+      - ./BackEnd/Gateway:/Gateway
+      - gateway_modules:/Gateway/node_modules
+    ports:
+      - '3001:3000'
+      - '9229:9229'
+    depends_on:
+      - company
+      - keys
+      - invoice
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}
+      - AWS_COGNITO_POOLID=${AWS_COGNITO_POOLID}
+      - BUCKET_NAME=${BUCKET}
+      - APN_PLATFORM_APPLICATION=${APN_PLATFORM_APPLICATION}
+      - GCM_PLATFORM_APPLICATION=${GCM_PLATFORM_APPLICATION}
+      - KEY_SERVICE=http://keys:3000
+      - COMPANY_SERVICE=http://company:3000
+      - INVOICE_SERVICE=http://invoice:3000
+      - STAGE=dev
+  
+  company:
+    build: 
+      context: .
+      dockerfile: ./BackEnd/Companies/Dockerfile.dev
+    volumes:
+      - ./BackEnd/Companies:/Companies
+      - companies_modules:/Companies/node_modules
+    ports:
+      - '3002:3000'
+      - '9230:9229'
+    environment:
+      - DATABASE_URI=${DATABASE_URI}
+      - STAGE=dev
+  
+  keys:
+    build:
+      context: .
+      dockerfile: ./BackEnd/Keys/Dockerfile.dev
+    volumes:
+      - ./BackEnd/Keys:/Keys
+      - keys_modules:/Keys/node_modules
+    ports:
+      - '3003:3000'
+      - '9231:9229'
+    environment:
+      - DATABASE_URI=${DATABASE_URI}
+      - STAGE=dev
+  
+  invoice:
+    build:
+      context: .
+      dockerfile: ./BackEnd/Invoices/Dockerfile.dev
+    volumes:
+      - ./BackEnd/Invoices:/Invoices
+      - keys_modules:/Invoices/node_modules
+    ports:
+      - '3004:3000'
+      - '9232:9229'
+    environment:
+      - DATABASE_URI=${DATABASE_URI}
+      - STAGE=dev

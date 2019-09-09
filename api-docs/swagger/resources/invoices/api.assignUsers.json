@@ -1,0 +1,54 @@
+{
+    "post": {
+        "summary":"Asignar factura a usuario",
+        "tags": [
+            "Facturas"
+        ],
+        "description": "Asigna una factura a un usuario registrado en la plataforma",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "name": "PLIP_TOKEN",
+                "in": "header",
+                "description": "El token generado para autenticarse con plip. <a href=\"https://docs.plip.com\">Más información</a>",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "name": "PLIP_SECRET",
+                "in": "header",
+                "description": "El secret generado para autenticarse con plip. <a href=\"https://docs.plip.com\">Más información</a>",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "name": "invoice",
+                "in": "body",
+                "description": "La información de la factura",
+                "required": true,
+                "schema": {
+                    "$ref": "./models/invoice.assign.json"
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Se asigno exitosamente a un usuario"
+            },
+            "400":{
+                "$ref":"../../common/400.error.json"
+            },
+            "404":{
+                "$ref":"../../common/404.error.json"
+            },
+            "401": {
+                "$ref":"../../common/401.error.json"
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "properties": {
+        "id": {
+            "type": "string",
+            "example":"abcd1234"
+		},
+		"user": {
+			"type": "string",
+            "example":"CC564738475"
+		}
+    }
+}

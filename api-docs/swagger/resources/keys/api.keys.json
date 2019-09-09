@@ -1,0 +1,159 @@
+{
+    "get": {
+        "summary": "Listar api keys del comercio",
+        "tags": [
+            "Keys"
+        ],
+        "description": "Retorna las api keys del comercio",
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "$ref": "../../common/key.header.json"
+            },
+            {
+                "name": "search",
+                "in": "query",
+                "description": "El valor para filtrar. Este valor aplica para las propiedades name y tags",
+                "required": false,
+                "schema": {
+                    "type": "string"
+                }
+            },
+            {
+                "name": "limit",
+                "in": "query",
+                "description": "La cantidad de resultados a solicitar. Por defecto son 50",
+                "required": false,
+                "schema": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            },
+            {
+                "name": "token",
+                "in": "query",
+                "description": "El indicador del último api-key visto.",
+                "required": false,
+                "schema": {
+                    "type": "string"
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Lista los api keys del comercio",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "keys": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "./models/key.json"
+                            }
+                        },
+                        "count": {
+                            "type": "integer",
+                            "example":"1"
+                        },
+                        "token": {
+                            "type": "integer",
+                            "example":"zaCELgL.0imfnc8mVLWwsAawjYr4Rx-Af50DDqtlx"
+                        }
+                    }
+                }
+            },
+            "400":{
+                "$ref":"../../common/400.error.json"
+            },
+            "401": {
+                "$ref":"../../common/401.error.json"
+            }
+        }
+    },
+    "post": {
+        "summary": "Crear Api key para el comercio",
+        "tags": [
+            "Keys"
+        ],
+        "description": "Crea un nuevo api key para el comercio",
+        "produces": [
+            "application/json"
+        ],
+        "consumes": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "$ref": "../../common/key.header.json"
+            },
+            {
+                "name": "key",
+                "in": "body",
+                "description": "La información del nuevo api key",
+                "required": true,
+                "schema": {
+                    "$ref": "./models/key.form.json"
+                }
+            }
+        ],
+        "responses": {
+            "201": {
+                "description": "La creación del nuevo api key es exitosa",
+                "schema": {
+                    "$ref": "./models/key.created.json"
+                }
+            },
+            "400":{
+                "$ref":"../../common/400.error.json"
+            },
+            "401": {
+                "$ref":"../../common/401.error.json"
+            }
+        }
+    },
+    "delete": {
+        "summary": "Elimina api key del comercio",
+        "tags": [
+            "Keys"
+        ],
+        "description": "Elimina un api key del comercio",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "$ref": "../../common/key.header.json"
+            },
+            {
+                "name": "name",
+                "in": "body",
+                "description": "El nombre del api key a eliminar",
+                "required": true,
+                "schema": {
+                    "properties": {
+                        "key": {
+                            "type": "string",
+                            "example":"Caja 1"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "La operación fué exitosa"
+            },
+            "400":{
+                "$ref":"../../common/400.error.json"
+            },
+            "401": {
+                "$ref":"../../common/401.error.json"
+            }
+        }
+    }
+}

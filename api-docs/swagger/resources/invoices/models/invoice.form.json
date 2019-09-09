@@ -1,0 +1,540 @@
+{
+    "properties": {
+        "version": {
+            "type": "string",
+            "required":true,
+            "example":"1.0"
+        },
+        "content": {
+            "type": "array",
+            "required": true,
+            "example": [
+                {
+                    "type": "header",
+                    "logo": "https://s3.amazonaws.com/plip-services-testplipbucket-gn6vidtiibec/companies/5d091f56180ac6c81fde8965/f0a3ee7091ee11e98e023f9fe3507e85.jpeg",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "NIT: 800.242.106-6",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true
+                        },
+                        {
+                            "type": "text",
+                            "text": "AEROPUERTO",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true
+                        },
+                        {
+                            "type": "text",
+                            "text": "CIIU 1234 Tarifa 13.8 x 1000",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true
+                        },
+                        {
+                            "type": "text",
+                            "text": "REGIMEN COMUN",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true
+                        },
+                        {
+                            "type": "text",
+                            "text": "Grandes Contribuyentes Según Resolución 0126xx del 14-12-2018 ",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true,
+                            "size": "small"
+                        },
+                        {
+                            "type": "text",
+                            "text": "Autoretenedores Según Resolución 0126xx del 14-12-2018 ",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true,
+                            "size": "small"
+                        },
+                        {
+                            "type": "text",
+                            "text": "IMPUESTOS INCLUIDOS",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true
+                        },
+                        {
+                            "type": "text",
+                            "text": "Autorización No. facturación: 123456789",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true,
+                            "size": "small"
+                        },
+                        {
+                            "type": "text",
+                            "text": "Autorizado el: 06/09/2018",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true,
+                            "size": "small"
+                        },
+                        {
+                            "type": "text",
+                            "text": "Autorizado hasta: 06/09/2020",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true,
+                            "size": "small"
+                        },
+                        {
+                            "type": "text",
+                            "text": "Del: 116-979.122 al: 116-5.000.000",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true,
+                            "size": "small"
+                        }
+                    ]
+                },
+                {
+                    "type": "division",
+                    "text": "CUENTA CERRADA",
+                    "align": "center",
+                    "isCurrency": false,
+                    "isNumber": false,
+                    "bold": true
+                },
+                {
+                    "type": "invoiceData",
+                    "generalInformation": {
+                        "number": "1234569",
+                        "counter": "1",
+                        "date": "2019-08-10T02:38:53Z",
+                        "Mesero": "Juan Perez",
+                        "Cajero": "Cajero 1",
+                        "Mesa": "1"
+                    },
+                    "items": [
+                        {
+                            "name": "Leche Alpina deslactosada",
+                            "code": "Leche-123",
+                            "quantity": 5,
+                            "total": 10000,
+                            "currency": "COP",
+                            "taxPercentage": 19
+                        },
+                        {
+                            "name": "Galletas Festival",
+                            "code": "Galle-123",
+                            "quantity": 5,
+                            "total": 10000,
+                            "currency": "COP",
+                            "taxPercentage": 19
+                        }
+                    ],
+                    "totalInformation": {
+                        "subtotal": 100000,
+                        "totalTax": 19000,
+                        "total": 122000,
+                        "impoconsumo": 3000
+                    },
+                    "paymentData": [
+                        {
+                            "type": "Received",
+                            "description": "Codensa",
+                            "value": 115000
+                        },
+                        {
+                            "type": "Received",
+                            "description": "Efectivo",
+                            "value": 7000
+                        },
+                        {
+                            "type": "Change",
+                            "description": "",
+                            "value": 0
+                        }
+                    ],
+                    "tributaryInformation": [
+                        {
+                            "title": {
+                                "text": "Discriminación tarifas IVA",
+                                "align": "left",
+                                "isCurrency": false,
+                                "isNumber": false,
+                                "bold": true
+                            },
+                            "content": [
+                                [
+                                    {
+                                        "type": "text",
+                                        "text": "Tarifa IVA",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false,
+                                        "bold": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "Valor base",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false,
+                                        "bold": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "Valor IVA",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false,
+                                        "bold": true
+                                    }
+                                ],
+                                [
+                                    {
+                                        "type": "text",
+                                        "text": "EXC",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "249.08",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "249.08",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    }
+                                ],
+                                [
+                                    {
+                                        "type": "text",
+                                        "text": "19",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "1.215.679",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "0",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    }
+                                ],
+                                [
+                                    {
+                                        "type": "text",
+                                        "text": "5",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "36.428",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "1.822",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    }
+                                ]
+                            ]
+                        },
+                        {
+                            "title": {
+                                "text": "Discriminación tarifas IVA 2",
+                                "align": "left",
+                                "isCurrency": false,
+                                "isNumber": false,
+                                "bold": true
+                            },
+                            "content": [
+                                [
+                                    {
+                                        "type": "text",
+                                        "text": "Tarifa IVA",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false,
+                                        "bold": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "Valor base",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false,
+                                        "bold": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "Valor IVA",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false,
+                                        "bold": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "Otra",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false,
+                                        "bold": true
+                                    }
+                                ],
+                                [
+                                    {
+                                        "type": "text",
+                                        "text": "EXC",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "249.08",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "249.08",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "Otra",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    }
+                                ],
+                                [
+                                    {
+                                        "type": "text",
+                                        "text": "19",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "1.215.679",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "0",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "Otra",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    }
+                                ],
+                                [
+                                    {
+                                        "type": "text",
+                                        "text": "5",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "36.428",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "1.822",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "Otra",
+                                        "align": "center",
+                                        "isCurrency": false,
+                                        "isNumber": false
+                                    }
+                                ]
+                            ]
+                        }
+                    ],
+                    "additionalInformation": {
+                        "type": "additionalInformation",
+                        "content": [
+                            {
+                                "title": {
+                                    "type": "text",
+                                    "text": "Puntos exito en esta compra",
+                                    "align": "left",
+                                    "bold": true,
+                                    "isCurrency": false,
+                                    "isNumber": false
+                                },
+                                "description": {
+                                    "type": "text",
+                                    "text": "500",
+                                    "align": "right",
+                                    "isCurrency": false,
+                                    "isNumber": true
+                                }
+                            },
+                            {
+                                "title": {
+                                    "type": "text",
+                                    "text": "Puntos exito vigentes",
+                                    "align": "left",
+                                    "bold": true,
+                                    "isCurrency": false,
+                                    "isNumber": false
+                                },
+                                "description": {
+                                    "type": "text",
+                                    "text": "500",
+                                    "align": "right",
+                                    "isCurrency": false,
+                                    "isNumber": true
+                                }
+                            },
+                            {
+                                "title": {
+                                    "type": "text",
+                                    "text": "Puntos exito a vencer",
+                                    "align": "left",
+                                    "bold": true,
+                                    "isCurrency": false,
+                                    "isNumber": false
+                                },
+                                "description": {
+                                    "type": "text",
+                                    "text": "500",
+                                    "align": "right",
+                                    "isCurrency": false,
+                                    "isNumber": true
+                                }
+                            },
+                            {
+                                "title": {
+                                    "type": "text",
+                                    "text": "Fecha de puntos a vencer",
+                                    "align": "left",
+                                    "bold": true,
+                                    "isCurrency": false,
+                                    "isNumber": false
+                                },
+                                "description": {
+                                    "type": "text",
+                                    "text": "Julio 2019",
+                                    "align": "right",
+                                    "isCurrency": false,
+                                    "isNumber": false
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "codes",
+                    "qr": "datos a poner en el QR",
+                    "barcode": "98939c55d932929"
+                },
+                {
+                    "type": "division",
+                    "text": "División",
+                    "align": "left",
+                    "isCurrency": false,
+                    "isNumber": false,
+                    "bold": true
+                },
+                {
+                    "type": "advertising",
+                    "content": [
+                        {
+                            "type": "Text",
+                            "text": "Aprovecha las promociones de final de año",
+                            "url": "https://www.exito.com"
+                        },
+                        {
+                            "type": "Image",
+                            "image": "https://plip-assets-1o6khezd40w70.s3.amazonaws.com/img/Publicidad1.png",
+                            "url": "https://www.alkosto.com"
+                        },
+                        {
+                            "type": "Image",
+                            "image": "https://plip-assets-1o6khezd40w70.s3.amazonaws.com/img/Publicidad2.png",
+                            "url": "https://www.exito.com"
+                        }
+                    ]
+                },
+                {
+                    "type": "footer",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "¡Gracias por visitarnos!",
+                            "align": "center",
+                            "size": "large",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true
+                        }
+                    ]
+                },
+                {
+                    "type": "backContent",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Descripción de atrás",
+                            "align": "center",
+                            "isCurrency": false,
+                            "isNumber": false,
+                            "bold": true
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

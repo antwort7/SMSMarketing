@@ -1,0 +1,30 @@
+{
+    "properties": {
+        "key": {
+            "type": "string",
+            "example":"zaCELgL.0imfnc8mVLWwsAawjYr4Rx-Af50DDqtlx"
+        },
+        "name": {
+            "type": "string",
+            "example":"Caja1"
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "required":true,
+            "example":["Bogota", "Norte", "Sucursal 1"]
+        },
+        "createdAt": {
+            "type": "string",
+            "example":"2019-03-26T00:44:41.548Z",
+            "description": "Fecha en formato ISO-8601"
+        },
+        "lastUsedAt": {
+            "type": "string",
+            "example":"2019-03-26T00:44:41.548Z",
+            "description": "Fecha en formato ISO-8601"
+        }
+    }
+}

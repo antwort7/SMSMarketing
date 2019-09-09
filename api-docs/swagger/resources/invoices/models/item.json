@@ -1,0 +1,24 @@
+{
+    "properties": {
+        "name":{
+			"type":"string",
+			"required": true,
+            "example":"Chocolate"
+		},
+		"quantity": {
+			"type": "integer",
+			"required": true,
+			"example":1
+		},
+		"discount": {
+			"type": "integer",
+			"required": true,
+			"example":100
+		},
+		"price": {
+			"type": "integer",
+			"required": true,
+			"example":5000
+		}
+    }
+}

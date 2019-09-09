@@ -1,0 +1,31 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "npm install eslint eslint-config-airbnb-base eslint-plugin-import eslint-plugin-chai-friendly -g",
+  "main": "index.js",
+  "scripts": {
+    "coverage": "nyc --reporter=html --reporter=text --reporter=lcov mocha BackEnd/*/Test/**/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jdflorez39/zuiite.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jdflorez39/zuiite/issues"
+  },
+  "homepage": "https://github.com/jdflorez39/zuiite#readme",
+  "devDependencies": {
+    "eslint": "^5.12.1",
+    "eslint-config-airbnb-base": "^11.1.1",
+    "eslint-plugin-chai-friendly": "^0.4.1",
+    "eslint-plugin-import": "^2.10.0",
+    "eslint-plugin-react": "^7.12.4",
+    "nyc": "^13.1.0",
+    "mocha": "^5.2.0",
+    "sinon": "^7.2.3",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1"
+  }
+}

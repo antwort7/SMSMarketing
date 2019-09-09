@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a service on AWS Fargate, hosted in a public subnet, and accessible via a public load balancer.
+Parameters:
+    TopicName:
+        Type: String
+
+Resources:
+    ProductionTopic:
+        Type: AWS::SNS::Topic
+        Properties: 
+            DisplayName: !Join
+                - ''
+                - 
+                    -  Production
+                    -  !Ref TopicName
+                    -  Topic
+            TopicName: !Join
+                - ''
+                - 
+                    -  Production
+                    -  !Ref TopicName
+                    -  Topic
+            
+    TestTopic:
+        Type: AWS::SNS::Topic
+        Properties: 
+            DisplayName: !Join
+                - ''
+                - 
+                    -  Test
+                    -  !Ref TopicName
+                    -  Topic
+            TopicName: !Join
+                - ''
+                - 
+                    -  Test
+                    -  !Ref TopicName
+                    -  Topic
+    
+    DevTopic:
+        Type: AWS::SNS::Topic
+        Properties: 
+            DisplayName: !Join
+                - ''
+                - 
+                    -  Dev
+                    -  !Ref TopicName
+                    -  Topic
+            TopicName: !Join
+                - ''
+                - 
+                    -  Dev
+                    -  !Ref TopicName
+                    -  Topic
+Outputs:
+    ProductionTopic:
+        Value: !Ref ProductionTopic
+        Export:
+            Name: !Join
+                - ''
+                - 
+                    - Production
+                    - !Ref TopicName
+                    - Topic
+    
+    TestTopic:
+        Value: !Ref TestTopic
+        Export:
+            Name: !Join
+                - ''
+                - 
+                    - Test
+                    - !Ref TopicName
+                    - Topic
+    
+    DevTopic:
+        Value: !Ref DevTopic
+        Export:
+            Name: !Join
+                - ''
+                - 
+                    - Dev
+                    - !Ref TopicName
+                    - Topic

@@ -1,0 +1,64 @@
+{
+    "get": {
+        "summary":"Verificar usuario",
+        "tags": [
+            "Clientes"
+        ],
+        "description": "Verifica los datos de un usuario",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+			{
+                "$ref": "../../common/key.header.json"
+            },
+			{
+				"name": "docType",
+				"in": "query",
+				"description": "El tipo de documento del usuario",
+				"schema": {
+					"type": "string",
+					"example": "CC"
+				}
+            },
+            {
+                "name": "docNumber",
+                "in": "query",
+                "description": "El número de documento",
+                "schema": {
+                    "type": "string",
+                    "example": "1019589334"
+                }
+			},
+			{
+                "name": "phoneNumber",
+                "in": "query",
+                "description": "El número de telefono",
+                "schema": {
+                    "type": "string",
+                    "example": "32056475674"
+                }
+            }
+		],
+        "responses": {
+            "200": {
+                "description": "El usuario con el documento dado",
+                "schema": {
+                    "$ref": "./models/client.json"
+                }
+			},
+			"404": {
+				"$ref":"../../common/404.error.json"
+			},
+            "400":{
+                "$ref":"../../common/400.error.json"
+            },
+            "401": {
+                "$ref":"../../common/401.error.json"
+            }
+        }
+    }
+}

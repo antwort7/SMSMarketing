@@ -1,0 +1,16 @@
+{
+    "properties": {
+        "name": {
+            "type": "string",
+            "example":"Caja1"
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "required":true,
+            "example":["Bogota", "Norte", "Sucursal 1"]
+        }
+    }
+}

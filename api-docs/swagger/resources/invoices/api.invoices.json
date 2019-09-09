@@ -1,0 +1,58 @@
+{
+    "post": {
+        "summary":"Crear factura",
+        "tags": [
+            "Facturas"
+        ],
+        "description": "Registra una factura en la plataforma PliP",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json",
+            "image/png"
+        ],
+        "parameters": [
+            {
+                "name": "PLIP_TOKEN",
+                "in": "header",
+                "description": "El token generado para autenticarse con plip. <a href=\"https://docs.plip.com\">Más información</a>",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "name": "PLIP_SECRET",
+                "in": "header",
+                "description": "El secret generado para autenticarse con plip. <a href=\"https://docs.plip.com\">Más información</a>",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "name": "invoice",
+                "in": "body",
+                "description": "La información de la factura",
+                "required": true,
+                "schema": {
+                    "$ref": "./models/invoice.form.json"
+                }
+            }
+        ],
+        "responses": {
+            "201": {
+                "description": "La creación de la factura fue exitosa",
+                "schema": {
+                    "$ref": "./models/invoice.created.json"
+                }
+            },
+            "400":{
+                "$ref":"../../common/400.error.json"
+            },
+            "404":{
+                "$ref":"../../common/404.error.json"
+            },
+            "401": {
+                "$ref":"../../common/401.error.json"
+            }
+        }
+    }
+}

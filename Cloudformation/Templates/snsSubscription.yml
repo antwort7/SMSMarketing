@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a service on AWS Fargate, hosted in a public subnet, and accessible via a public load balancer.
+Parameters:
+    TopicName:
+        Type: String
+    ServiceName:
+        Type: String
+
+Resources:
+    ProductionQueuePolicy:
+        Type: AWS::SQS::QueuePolicy
+        Properties: 
+            Queues:
+                - !Sub
+                    - ${ServiceName}ProductionQueue
+                    - { ServiceName: !Ref ServiceName }
+            PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    -
+                        Effect: Allow
+                        Principal: '*'
+                        Action: 
+                            - 'sqs:SendMessage'
+                        Resource: 
+                            Fn::ImportValue:
+                                !Sub
+                                    - ${ServiceName}ProductionQueue
+                                    - { ServiceName: !Ref ServiceName }
+                        Condition:
+                            ArnEquals:
+                                'aws:SourceArn': 
+                                    Fn::ImportValue:
+                                        !Sub
+                                            - Production${TopicName}Topic
+                                            - { TopicName: !Ref TopicName }
+    
+    TestQueuePolicy:
+        Type: AWS::SQS::QueuePolicy
+        Properties: 
+            Queues:
+                - !Sub
+                    - ${ServiceName}TestQueue
+                    - { ServiceName: !Ref ServiceName }
+            PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    -
+                        Effect: Allow
+                        Principal: '*'
+                        Action: 
+                            - 'sqs:SendMessage'
+                        Resource: 
+                            Fn::ImportValue:
+                                !Sub
+                                    - ${ServiceName}TestQueue
+                                    - { ServiceName: !Ref ServiceName }
+                        Condition:
+                            ArnEquals:
+                                'aws:SourceArn': 
+                                    Fn::ImportValue:
+                                        !Sub
+                                            - Test${TopicName}Topic
+                                            - { TopicName: !Ref TopicName }
+    
+    DevQueuePolicy:
+        Type: AWS::SQS::QueuePolicy
+        Properties: 
+            Queues:
+                - !Sub
+                    - ${ServiceName}DevQueue
+                    - { ServiceName: !Ref ServiceName }
+            PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    -
+                        Effect: Allow
+                        Principal: '*'
+                        Action: 
+                            - 'sqs:SendMessage'
+                        Resource: 
+                            Fn::ImportValue:
+                                !Sub
+                                    - ${ServiceName}DevQueue
+                                    - { ServiceName: !Ref ServiceName }
+                        Condition:
+                            ArnEquals:
+                                'aws:SourceArn': 
+                                    Fn::ImportValue:
+                                        !Sub
+                                            - Dev${TopicName}Topic
+                                            - { TopicName: !Ref TopicName }
+
+    ProductionSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            Endpoint:
+                Fn::ImportValue:
+                    !Sub
+                        - ${ServiceName}ProductionQueue
+                        - { ServiceName: !Ref ServiceName }
+            Protocol: sqs
+            TopicArn: 
+                Fn::ImportValue:
+                    !Sub
+                        - Production${TopicName}Topic
+                        - { TopicName: !Ref TopicName }
+    TestSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            Endpoint:
+                Fn::ImportValue:
+                    !Sub
+                        - ${ServiceName}TestQueue
+                        - { ServiceName: !Ref ServiceName }
+            Protocol: sqs
+            TopicArn: 
+                Fn::ImportValue:
+                    !Sub
+                        - Test${TopicName}Topic
+                        - { TopicName: !Ref TopicName }
+    
+    DevSubscription:
+        Type: AWS::SNS::Subscription
+        Properties:
+            Endpoint:
+                Fn::ImportValue:
+                    !Sub
+                        - ${ServiceName}DevQueue
+                        - { ServiceName: !Ref ServiceName }
+            Protocol: sqs
+            TopicArn: 
+                Fn::ImportValue:
+                    !Sub
+                        - Dev${TopicName}Topic
+                        - { TopicName: !Ref TopicName }

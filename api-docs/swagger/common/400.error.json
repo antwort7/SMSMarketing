@@ -1,0 +1,6 @@
+{
+    "description": "Alguno de los campos dados es inválido",
+    "schema": {
+        "$ref": "./error.json"
+    }
+}

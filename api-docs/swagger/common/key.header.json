@@ -1,0 +1,7 @@
+{
+    "name": "Authorization",
+    "in": "header",
+    "description": "La llave generada para autenticarse con plip. <a href=\"https://docs.plip.com\">Más información</a>",
+    "required": true,
+    "type": "string"
+}

@@ -1,0 +1,415 @@
+Description: Deploys the ECS Cluster for deploying containers
+
+Parameters:
+    VPC: 
+        Description: What Vpc to deploy to
+        Type: AWS::EC2::VPC::Id
+    Subnets:
+        Description: Choose which subnets the Application Load Balancer should be deployed to
+        Type: List<AWS::EC2::Subnet::Id>
+    KeyPair:
+        Description: The keypair for the ec2 instances
+        Type: AWS::EC2::KeyPair::KeyName
+    ClusterSize:
+        Type: Number
+        Default: 2
+    ProjectSecurityGroup:
+         Type: String
+    InstanceType:
+        Type: String
+        Default: t2.micro
+        AllowedValues: 
+            [t2.micro, t2.small, t2.medium, t2.large, m3.medium, m3.large,
+            m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+            c4.large, c4.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge, c3.large, c3.xlarge,
+            c3.2xlarge, c3.4xlarge, c3.8xlarge, r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge,
+            r3.8xlarge, i2.xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge]
+        ConstraintDescription: Please choose a valid instance type.
+    Certificate:
+        Type: String
+
+Mappings:
+    AWSRegionToAMI:
+        us-east-1:
+            AMI: ami-5253c32d
+        us-east-2:
+            AMI: ami-956e52f0
+        
+
+Resources:
+    #EC2 Cluster Configuration
+    ContainerSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Access to the ECS containers
+            VpcId: !Ref VPC
+
+    EcsSecurityGroupIngressFromPublicALB:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Ingress from the public ALB
+            GroupId: !Ref ContainerSecurityGroup
+            IpProtocol: -1
+            SourceSecurityGroupId: !Ref PublicLoadBalancerSG
+
+    EcsSecurityGroupIngressFromSelf:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Ingress from other containers in the same security group
+            GroupId: !Ref ContainerSecurityGroup
+            IpProtocol: -1
+            SourceSecurityGroupId: !Ref ContainerSecurityGroup
+    
+    TestContainerSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Access to the ECS containers
+            VpcId: !Ref VPC
+
+    TestEcsSecurityGroupIngressFromPublicALB:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Ingress from the public ALB
+            GroupId: !Ref TestContainerSecurityGroup
+            IpProtocol: -1
+            SourceSecurityGroupId: !Ref PublicLoadBalancerSG
+
+    TestEcsSecurityGroupIngressFromSelf:
+        Type: AWS::EC2::SecurityGroupIngress
+        Properties:
+            Description: Ingress from other containers in the same security group
+            GroupId: !Ref TestContainerSecurityGroup
+            IpProtocol: -1
+            SourceSecurityGroupId: !Ref TestContainerSecurityGroup
+
+    # Load Balancer
+    PublicLoadBalancerSG:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Access to the public facing load balancer
+            VpcId: !Ref VPC
+            SecurityGroupIngress:
+                # Allow access to ALB from anywhere on the internet
+                -  
+                    CidrIp: 0.0.0.0/0
+                    IpProtocol: "TCP"
+                    FromPort: 443
+                    ToPort: 443
+
+    PublicLoadBalancer:
+        Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+        Properties:
+            Subnets: !Ref Subnets
+            SecurityGroups: [!Ref PublicLoadBalancerSG]
+
+    DummyTargetGroupPublic:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties:
+            HealthCheckIntervalSeconds: 6
+            HealthCheckPath: /
+            HealthCheckProtocol: HTTP
+            HealthCheckTimeoutSeconds: 5
+            HealthyThresholdCount: 2
+            Name: DummyTargetGroup
+            Port: 80
+            Protocol: HTTP
+            UnhealthyThresholdCount: 2
+            TargetType: instance
+            VpcId: !Ref VPC
+
+    PublicLoadBalancerListener:
+        Type: AWS::ElasticLoadBalancingV2::Listener
+        DependsOn: PublicLoadBalancer
+        Properties:
+            Certificates:
+                -
+                    CertificateArn: !Ref Certificate
+            DefaultActions:
+                - 
+                    TargetGroupArn: !Ref DummyTargetGroupPublic
+                    Type: 'forward'
+            LoadBalancerArn: !Ref PublicLoadBalancer
+            Port: 443
+            Protocol: HTTPS
+            SslPolicy: ELBSecurityPolicy-2016-08
+
+    #ECS
+    ECSCluster:
+        Type: AWS::ECS::Cluster
+
+    TestECSCluster:
+        Type: AWS::ECS::Cluster
+
+    # This is an IAM role which authorizes ECS to manage resources on your
+    # account on your behalf, such as updating your load balancer with the
+    # details of where your containers are, so that traffic can reach your
+    # containers.
+    ECSRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Statement:
+                - 
+                    Effect: Allow
+                    Principal:
+                        Service: [ecs.amazonaws.com]
+                    Action: ['sts:AssumeRole']
+            Path: /
+            Policies:
+            - 
+                PolicyName: ecs-service
+                PolicyDocument:
+                    Statement:
+                    - 
+                        Effect: Allow
+                        Action:
+                        # Rules which allow ECS to attach network interfaces to instances
+                        # on your behalf in order for awsvpc networking mode to work right
+                        - 'ec2:AttachNetworkInterface'
+                        - 'ec2:CreateNetworkInterface'
+                        - 'ec2:CreateNetworkInterfacePermission'
+                        - 'ec2:DeleteNetworkInterface'
+                        - 'ec2:DeleteNetworkInterfacePermission'
+                        - 'ec2:Describe*'
+                        - 'ec2:DetachNetworkInterface'
+
+                        # Rules which allow ECS to update load balancers on your behalf
+                        # with the information sabout how to send traffic to your containers
+                        - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
+                        - 'elasticloadbalancing:DeregisterTargets'
+                        - 'elasticloadbalancing:Describe*'
+                        - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
+                        - 'elasticloadbalancing:RegisterTargets'
+                        Resource: '*'
+
+    # This is a role which is used by the ECS tasks themselves.
+    ECSTaskExecutionRole:
+        Type: 'AWS::IAM::Role'
+        Properties:
+            AssumeRolePolicyDocument:
+                Statement:
+                    - 
+                        Action:
+                            - 'sts:AssumeRole'
+                        Effect: Allow
+                        Principal:
+                            Service:
+                            - ecs-tasks.amazonaws.com
+            Policies:
+                - 
+                    PolicyName: DomainManagerLogsPolicy
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                        - 
+                            Effect: Allow
+                            Action:
+                                # Allow the ECS Tasks to download images from ECR
+                                - 'ecr:GetAuthorizationToken'
+                                - 'ecr:BatchCheckLayerAvailability'
+                                - 'ecr:GetDownloadUrlForLayer'
+                                - 'ecr:BatchGetImage'
+                                #Cloudwatch logging
+                                - 'logs:CreateLogGroup'
+                                - 'logs:CreateLogStream'
+                                - 'logs:PutLogEvents'
+                                - 'logs:DescribeLogStreams'
+                            Resource: '*'
+
+    EC2Role:
+        Type: AWS::IAM::Role
+        Properties:
+            Path: /
+            AssumeRolePolicyDocument:
+                Statement:
+                - 
+                    Action: sts:AssumeRole
+                    Effect: Allow
+                    Principal:
+                        Service: ec2.amazonaws.com
+            ManagedPolicyArns:
+                - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+
+    #AutoScalingGroup
+    InstanceProfile:
+        Type: AWS::IAM::InstanceProfile
+        Properties:
+            Path: /
+            Roles:
+                - !Ref EC2Role
+
+    AutoScalingGroup:
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            VPCZoneIdentifier: !Ref Subnets
+            LaunchConfigurationName: !Ref LaunchConfiguration
+            MinSize: !Ref ClusterSize
+            MaxSize: !Ref ClusterSize
+            DesiredCapacity: !Ref ClusterSize
+        CreationPolicy:
+            ResourceSignal:
+                Timeout: PT15M
+        UpdatePolicy:
+            AutoScalingRollingUpdate:
+                MinInstancesInService: 1
+                MaxBatchSize: 1
+                PauseTime: PT15M
+                WaitOnResourceSignals: true
+    
+    TestAutoScalingGroup:
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            VPCZoneIdentifier: !Ref Subnets
+            LaunchConfigurationName: !Ref TestLaunchConfiguration
+            MinSize: 1
+            MaxSize: 1
+            DesiredCapacity: 1
+        CreationPolicy:
+            ResourceSignal:
+                Timeout: PT15M
+        UpdatePolicy:
+            AutoScalingRollingUpdate:
+                MinInstancesInService: 1
+                MaxBatchSize: 1
+                PauseTime: PT15M
+                WaitOnResourceSignals: true
+
+    LaunchConfiguration:
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Metadata:
+            AWS::CloudFormation::Init:
+                config:
+                    commands:
+                        01_add_instance_to_cluster:
+                            command: !Sub |
+                                cat <<EOF> /etc/ecs/ecs.config
+                                ECS_CLUSTER=${ECSCluster}
+                                ECS_ENABLE_TASK_IAM_ROLE=true
+                                EOF
+                    files:
+                        "/etc/cfn/cfn-hup.conf":
+                            mode: 000400
+                            owner: root
+                            group: root
+                            content: !Sub |
+                                [main]
+                                stack=${AWS::StackId}
+                                region=${AWS::Region}
+                        "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+                            content: !Sub |
+                                [cfn-auto-reloader-hook]
+                                triggers=post.update
+                                path=Resources.ContainerInstances.Metadata.AWS::CloudFormation::Init
+                                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource LaunchConfiguration
+                services:
+                    sysvinit:
+                        cfn-hup:
+                            enabled: true
+                            ensureRunning: true
+                            files:
+                                - /etc/cfn/cfn-hup.conf
+                                - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        Properties:
+            ImageId: !FindInMap [ AWSRegionToAMI, !Ref "AWS::Region", AMI ]
+            InstanceType: !Ref InstanceType
+            IamInstanceProfile: !Ref InstanceProfile
+            KeyName: !Ref KeyPair
+            SecurityGroups:
+                - !Ref ProjectSecurityGroup
+                - !Ref ContainerSecurityGroup
+            UserData:
+                "Fn::Base64": 
+                    !Sub |
+                        #!/bin/bash
+                        yum install -y aws-cfn-bootstrap
+                        /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource LaunchConfiguration
+                        /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource AutoScalingGroup
+    
+    TestLaunchConfiguration:
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Metadata:
+            AWS::CloudFormation::Init:
+                config:
+                    commands:
+                        01_add_instance_to_cluster:
+                            command: !Sub |
+                                cat <<EOF> /etc/ecs/ecs.config
+                                ECS_CLUSTER=${TestECSCluster}
+                                ECS_ENABLE_TASK_IAM_ROLE=true
+                                EOF
+                    files:
+                        "/etc/cfn/cfn-hup.conf":
+                            mode: 000400
+                            owner: root
+                            group: root
+                            content: !Sub |
+                                [main]
+                                stack=${AWS::StackId}
+                                region=${AWS::Region}
+                        "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+                            content: !Sub |
+                                [cfn-auto-reloader-hook]
+                                triggers=post.update
+                                path=Resources.ContainerInstances.Metadata.AWS::CloudFormation::Init
+                                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource TestLaunchConfiguration
+                services:
+                    sysvinit:
+                        cfn-hup:
+                            enabled: true
+                            ensureRunning: true
+                            files:
+                                - /etc/cfn/cfn-hup.conf
+                                - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        Properties:
+            ImageId: !FindInMap [ AWSRegionToAMI, !Ref "AWS::Region", AMI ]
+            InstanceType: t2.micro
+            IamInstanceProfile: !Ref InstanceProfile
+            KeyName: !Ref KeyPair
+            SecurityGroups:
+                - !Ref ContainerSecurityGroup
+            UserData:
+                "Fn::Base64": 
+                    !Sub |
+                        #!/bin/bash
+                        yum install -y aws-cfn-bootstrap
+                        /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource TestLaunchConfiguration
+                        /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource TestAutoScalingGroup
+
+Outputs:
+    ClusterName:
+        Description: The name of the ECS cluster
+        Value: !Ref ECSCluster
+        Export:
+            Name: ECSClusterName
+
+    TestClusterName:
+        Description: The name of the ECS cluster
+        Value: !Ref TestECSCluster
+        Export:
+            Name: TestECSClusterName
+
+    ExternalUrl:
+        Description: The url of the external load balancer
+        Value: !Join ['', ['http://', !GetAtt 'PublicLoadBalancer.DNSName']]
+        Export:
+            Name: ApiUrl
+    ECSRole:
+        Description: The ARN of the ECS role
+        Value: !GetAtt ECSRole.Arn
+        Export:
+            Name: ECSContainerRole
+    ECSTaskExecutionRole:
+        Description: The ARN of the ECS role
+        Value: !GetAtt ECSTaskExecutionRole.Arn
+        Export:
+            Name: ECSTaskExecutionRole
+    PublicListener:
+        Description: The ARN of the public load balancer's Listener
+        Value: !Ref PublicLoadBalancerListener
+        Export:
+            Name: LoadBalancerListener
+    ContainerSecurityGroup:
+        Description: A security group used to allow Fargate containers to receive traffic
+        Value: !Ref ContainerSecurityGroup
+        Export:
+            Name: ECSContainerSecurityGroup

@@ -1,0 +1,15 @@
+FROM node:carbon
+
+ARG NPM_TOKEN
+
+RUN echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+
+RUN yarn global add gulp
+RUN yarn add gulp
+
+WORKDIR /Mailer
+ADD ./BackEnd/Mailer/package.json /Mailer/package.json
+
+RUN yarn install
+
+CMD ["yarn", "start"]

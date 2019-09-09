@@ -1,0 +1,24 @@
+{
+    "properties": {
+        "id":{
+            "type":"string",
+            "example":"599b549abb888267daa9c840"
+        },
+        "nombreCompleto": {
+            "properties": {
+                "nombre": {
+                    "type": "string",
+                    "example":"John"
+                },
+                "apellido": {
+                    "type": "string",
+                    "example":"Doe"
+                }
+            }
+        },
+		"puntosPlip":{
+            "type":"integer",
+            "example":60
+        }
+    }
+}

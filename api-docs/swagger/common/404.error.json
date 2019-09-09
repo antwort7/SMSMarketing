@@ -1,0 +1,6 @@
+{
+    "description": "El recurso solicitado no existe",
+    "schema": {
+        "$ref": "./error.json"
+    }
+}

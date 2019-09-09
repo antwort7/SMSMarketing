@@ -1,0 +1,996 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template for deploying base resources
+Metadata: 
+    AWS::CloudFormation::Interface: 
+        ParameterGroups:
+        - 
+            Label: 
+                default: "Github"
+            Parameters: 
+                - GitHubUser
+                - GitHubRepo
+                - GitHubBranch
+                - GitHubToken
+        -   Label:
+                default: "Template"
+            Parameters:
+                - TemplateBucket
+        -   Label:
+                default: "SMTP"
+            Parameters:
+                - SMTPHost
+                - SMTPUser
+                - SMTPPassword
+        -   Label:
+                default: "Encryption Key"
+            Parameters:
+                - EncryptionKey
+        # -   Label:
+        #         default: "PayU"
+        #     Parameters:
+        #         - PayUMerchantId
+        #         - PayUAccountId
+        #         - PayUApiKey
+        #         - PayUApiLogin
+
+        ParameterLabels: 
+            GitHubUser: 
+                default: "Username"
+            GitHubRepo: 
+                default: "Repository"
+            GitHubBranch: 
+                default: "Branch"
+            GitHubToken: 
+                default: "Token"
+            TemplateBucket:
+                default: "Template S3"
+            SMTPHost: 
+                default: "Host"
+            SMTPUser: 
+                default: "User"
+            SMTPPassword: 
+                default: "Password"
+            EncryptionKey:
+                default: "Encryption Key"
+            # PayUMerchantId:
+            #     default: Merchant id
+            # PayUAccountId:
+            #     default: Account id
+            # PayUApiKey:
+            #     default: Api key
+            # PayUApiLogin:
+            #     default: Api login
+
+Parameters:
+    GitHubRepo:
+        Type: String
+
+    GitHubBranch:
+        Type: String
+
+    GitHubToken:
+        Type: String
+        NoEcho: true
+        Description: https://github.com/settings/tokens
+
+    GitHubUser:
+        Type: String
+
+    TemplateBucket:
+        Type: String
+
+    SMTPHost:
+        Type: String
+        NoEcho: true
+    SMTPUser:
+        Type: String
+        NoEcho: true
+    SMTPPassword:
+        Type: String
+        NoEcho: true
+
+    EncryptionKey:
+        Type: String
+        NoEcho: true
+    # PayUMerchantId:
+    #     Type: String
+    #     NoEcho: true
+    #     Description: PayU merchant id
+    # PayUAccountId:
+    #     Type: String
+    #     NoEcho: true
+    #     Description: PayU account id
+    # PayUApiKey:
+    #     Type: String
+    #     NoEcho: true
+    #     Description: PayU api key
+    # PayUApiLogin:
+    #     Type: String
+    #     NoEcho: true
+    #     Description: PayU api login
+
+Resources:
+    #########      Gateway         ########
+    PlipBucket:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+
+    TestPlipBucket:
+        Type: AWS::S3::Bucket
+        DeletionPolicy: Retain
+
+    GatewayLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties: 
+            LogGroupName: Gateway
+            RetentionInDays: 30
+    
+    TestGatewayLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties: 
+            LogGroupName: GatewayTest
+            RetentionInDays: 30
+
+    GatewayRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Statement:
+                    - 
+                        Action:
+                            - 'sts:AssumeRole'
+                        Effect: Allow
+                        Principal:
+                            Service:
+                                - ecs-tasks.amazonaws.com
+            Policies:
+                - 
+                    PolicyName: GatewayRole
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            - 
+                                Effect: Allow
+                                Action:
+                                    - s3:*
+                                Resource:
+                                    - !Sub arn:aws:s3:::${PlipBucket}/*
+                                    - !Sub arn:aws:s3:::${TestPlipBucket}/*
+                            -
+                                Effect: Allow
+                                Action:
+                                    -  'cognito-identity:*'
+                                    -  'cognito-idp:*'
+                                    -  'cognito-sync:*'
+                                    -  'iam:ListRoles'
+                                    -  'iam:ListOpenIdConnectProviders'
+                                    -  'sns:*'
+                                Resource:
+                                    - '*'
+    
+    GatewayTaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        DependsOn: GatewayRole
+        Properties:
+            RequiresCompatibilities: 
+                - EC2
+            NetworkMode: bridge
+            ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+            TaskRoleArn:  !GetAtt GatewayRole.Arn
+            ContainerDefinitions:
+                - 
+                    Name: Gateway
+                    Cpu: 128
+                    Memory: 128
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/gateway:latest
+                    PortMappings:
+                        - ContainerPort: 3000
+                    Environment: 
+                        - 
+                            Name: AWS_COGNITO_POOLID
+                            Value: !ImportValue CognitoPoolProd
+                        - 
+                            Name: BUCKET_NAME
+                            Value: !Ref PlipBucket
+                        -
+                            Name: KEY_SERVICE
+                            Value: http://keys.plip
+                        -
+                            Name: COMPANY_SERVICE
+                            Value: http://companies.plip
+                        -
+                            Name: INVOICE_SERVICE
+                            Value: http://invoices.plip
+                        -
+                            Name: BASE_PATH
+                            Value: /api
+                        - 
+                            Name: STAGE
+                            Value: Production
+                        -
+                            Name: AWS_REGION
+                            Value: !Ref 'AWS::Region'
+                        -
+                            Name: AWS_ACCOUNT_ID
+                            Value: !Ref AWS::AccountId
+                        -
+                            Name: APN_PLATFORM_APPLICATION
+                            Value: app/APNS/Apple
+                        -
+                            Name: GCM_PLATFORM_APPLICATION
+                            Value: app/GCM/Google
+                       
+                    LogConfiguration:
+                        LogDriver: awslogs
+                        Options:
+                            awslogs-group: Gateway
+                            awslogs-region: !Ref AWS::Region
+                            awslogs-stream-prefix: service
+
+    TestGatewayTaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        DependsOn: GatewayRole
+        Properties:
+            RequiresCompatibilities: 
+                - EC2
+            NetworkMode: bridge
+            ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+            TaskRoleArn:  !GetAtt GatewayRole.Arn
+            ContainerDefinitions:
+                - 
+                    Name: Gateway
+                    Cpu: 128
+                    Memory: 128
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/gateway:latest
+                    PortMappings:
+                        - ContainerPort: 3000
+                    Environment: 
+                        - 
+                            Name: AWS_COGNITO_POOLID
+                            Value: !ImportValue CognitoPoolTest
+                        - 
+                            Name: BUCKET_NAME
+                            Value: !Ref TestPlipBucket
+                        -
+                            Name: KEY_SERVICE
+                            Value: http://test.keys.plip
+                        -
+                            Name: COMPANY_SERVICE
+                            Value: http://test.companies.plip
+                        -
+                            Name: INVOICE_SERVICE
+                            Value: http://test.invoices.plip
+                        -
+                            Name: BASE_PATH
+                            Value: /test
+                        - 
+                            Name: STAGE
+                            Value: Test
+                        -
+                            Name: AWS_REGION
+                            Value: !Ref 'AWS::Region'
+                        -
+                            Name: AWS_ACCOUNT_ID
+                            Value: !Ref AWS::AccountId
+                        -
+                            Name: APN_PLATFORM_APPLICATION
+                            Value: app/APNS/AppleTest
+                        -
+                            Name: GCM_PLATFORM_APPLICATION
+                            Value: app/GCM/GoogleTest
+                        
+                    LogConfiguration:
+                        LogDriver: awslogs
+                        Options:
+                            awslogs-group: GatewayTest
+                            awslogs-region: !Ref AWS::Region
+                            awslogs-stream-prefix: service
+   
+    GatewayService:
+        Type: AWS::CloudFormation::Stack
+        DependsOn:
+            - GatewayTaskDefinition
+            - TestGatewayTaskDefinition
+        Properties:
+            TemplateURL: !Sub
+                - https://s3.amazonaws.com/${Bucket}/cloudformation/elbservice.yml
+                - { Bucket: !Ref TemplateBucket} 
+            Parameters: 
+                ServiceName: Gateway
+                RepositoryName: gateway
+                TaskDefinition: !Ref GatewayTaskDefinition
+                TestTaskDefinition: !Ref TestGatewayTaskDefinition
+                Priority: 1
+                TestPriority: 2
+                WSPriority: 3
+                TestWSPriority: 4
+                ServiceCount: 0
+                Path: '/api/graphql'
+                TestPath: '/test/graphql'
+                WebsocketPath: '/ws/api/subscriptions'
+                TestWebsocketPath: '/ws/test/subscriptions'
+                HealthCheckPath: /ping
+                GitHubUser: !Ref GitHubUser
+                GitHubRepo: !Ref GitHubRepo
+                GitHubBranch: !Ref GitHubBranch
+                GitHubToken: !Ref GitHubToken
+                BuildPath: ./BackEnd/Gateway
+
+    InvoicesLoadBalancerRule:
+        DependsOn: GatewayService
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            Actions:
+                - 
+                    TargetGroupArn: !GetAtt GatewayService.Outputs.ServiceTargetGroup
+                    Type: forward
+            Conditions:
+                - 
+                    Field: path-pattern
+                    Values: 
+                        - /api/invoices
+            ListenerArn: !ImportValue LoadBalancerListener
+            Priority: 5
+    
+    InvoicesTestLoadBalancerRule:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            Actions:
+                - 
+                    TargetGroupArn: !GetAtt GatewayService.Outputs.TestServiceTargetGroup
+                    Type: forward
+            Conditions:
+                - 
+                    Field: path-pattern
+                    Values: 
+                        - /test/invoices
+            ListenerArn: !ImportValue LoadBalancerListener
+            Priority: 6
+
+    AssignUsersLoadBalancerRule:
+        DependsOn: GatewayService
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            Actions:
+                - 
+                    TargetGroupArn: !GetAtt GatewayService.Outputs.ServiceTargetGroup
+                    Type: forward
+            Conditions:
+                - 
+                    Field: path-pattern
+                    Values: 
+                        - /api/assign-user
+            ListenerArn: !ImportValue LoadBalancerListener
+            Priority: 7
+    
+    AssignUsersTestLoadBalancerRule:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            Actions:
+                - 
+                    TargetGroupArn: !GetAtt GatewayService.Outputs.TestServiceTargetGroup
+                    Type: forward
+            Conditions:
+                - 
+                    Field: path-pattern
+                    Values: 
+                        - /test/assign-user
+            ListenerArn: !ImportValue LoadBalancerListener
+            Priority: 8
+    ########    End Gateway       ########
+
+    # ########      User      ########
+    # UserLogGroup:
+    #     Type: AWS::Logs::LogGroup
+    #     Properties: 
+    #         LogGroupName: Users
+    #         RetentionInDays: 30
+    
+    # TestUserLogGroup:
+    #     Type: AWS::Logs::LogGroup
+    #     Properties: 
+    #         LogGroupName: UsersTest
+    #         RetentionInDays: 30
+
+    # UserRole:
+    #     Type: AWS::IAM::Role
+    #     Properties:
+    #         AssumeRolePolicyDocument:
+    #             Statement:
+    #                 - 
+    #                     Action:
+    #                         - 'sts:AssumeRole'
+    #                     Effect: Allow
+    #                     Principal:
+    #                         Service:
+    #                             - ecs-tasks.amazonaws.com
+    #         Policies:
+    #             - 
+    #                 PolicyName: UserPolicy
+    #                 PolicyDocument:
+    #                     Version: '2012-10-17'
+    #                     Statement:
+    #                         -
+    #                             Effect: Allow
+    #                             Action:
+    #                                 -  'cognito-identity:*'
+    #                                 -  'cognito-idp:*'
+    #                                 -  'cognito-sync:*'
+    #                                 -  'iam:ListRoles'
+    #                                 -  'iam:ListOpenIdConnectProviders'
+    #                                 -  'sns:ListPlatformApplications'
+    #                             Resource: '*'
+    
+    # UserTaskDefinition:
+    #     Type: AWS::ECS::TaskDefinition
+    #     DependsOn: UserRole
+    #     Properties:
+    #         RequiresCompatibilities: 
+    #             - EC2
+    #         NetworkMode: bridge
+    #         ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+    #         TaskRoleArn:  !GetAtt UserRole.Arn
+    #         ContainerDefinitions:
+    #             - 
+    #                 Name: UserService
+    #                 Cpu: 128
+    #                 Memory: 128
+    #                 Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/users-service:latest
+    #                 PortMappings:
+    #                     - ContainerPort: 3000
+    #                 Environment: 
+    #                     - 
+    #                         Name: DATABASE_URI
+    #                         Value: !ImportValue MongoDB
+    #                     - 
+    #                         Name: AWS_COGNITO_POOLID
+    #                         Value: !ImportValue CognitoPoolProd
+    #                     - 
+    #                         Name: STAGE
+    #                         Value: Production
+    #                     -
+    #                         Name: AWS_REGION
+    #                         Value: !Ref 'AWS::Region'
+
+    #                 LogConfiguration:
+    #                     LogDriver: awslogs
+    #                     Options:
+    #                         awslogs-group: Users
+    #                         awslogs-region: !Ref AWS::Region
+    #                         awslogs-stream-prefix: service
+    
+    # TestUserTaskDefinition:
+    #     Type: AWS::ECS::TaskDefinition
+    #     DependsOn: UserRole
+    #     Properties:
+    #         RequiresCompatibilities: 
+    #             - EC2
+    #         NetworkMode: bridge
+    #         ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+    #         TaskRoleArn:  !GetAtt UserRole.Arn
+    #         ContainerDefinitions:
+    #             - 
+    #                 Name: UserService
+    #                 Cpu: 128
+    #                 Memory: 128
+    #                 Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/users-service:latest
+    #                 PortMappings:
+    #                     - ContainerPort: 3000
+    #                 Environment: 
+    #                     - 
+    #                         Name: DATABASE_URI
+    #                         Value: !ImportValue TestMongoDB
+    #                     - 
+    #                         Name: AWS_COGNITO_POOLID
+    #                         Value: !ImportValue CognitoPoolTest
+    #                     - 
+    #                         Name: STAGE
+    #                         Value: Test
+    #                     -
+    #                         Name: AWS_REGION
+    #                         Value: !Ref 'AWS::Region'
+
+    #                 LogConfiguration:
+    #                     LogDriver: awslogs
+    #                     Options:
+    #                         awslogs-group: UsersTest
+    #                         awslogs-region: !Ref AWS::Region
+    #                         awslogs-stream-prefix: service
+   
+    # UserEcsService:
+    #     Type: AWS::CloudFormation::Stack
+    #     Properties:
+    #         TemplateURL: !Sub
+    #             - https://s3.amazonaws.com/${Bucket}/cloudformation/microservice.yml
+    #             - { Bucket: !Ref TemplateBucket} 
+    #         Parameters: 
+    #             ServiceName: UserService
+    #             RepositoryName: users-service
+    #             # TaskDefinition: !Ref UserTaskDefinition
+    #             # ServiceCount: 2
+    #             GitHubUser: !Ref GitHubUser
+    #             GitHubRepo: !Ref GitHubRepo
+    #             GitHubBranch: !Ref GitHubBranch
+    #             GitHubToken: !Ref GitHubToken
+    #             BuildPath: ./BackEnd/Users
+    # ########      End User      ########
+
+    # ########      Mailer      ########
+    # MailerLogGroup:
+    #     Type: AWS::Logs::LogGroup
+    #     Properties: 
+    #         LogGroupName: Mailer
+    #         RetentionInDays: 30
+    
+    # TestMailerLogGroup:
+    #     Type: AWS::Logs::LogGroup
+    #     Properties: 
+    #         LogGroupName: MailerTest
+    #         RetentionInDays: 30
+    
+    # MailerRole:
+    #     Type: AWS::IAM::Role
+    #     Properties:
+    #         AssumeRolePolicyDocument:
+    #             Statement:
+    #                 - 
+    #                     Action:
+    #                         - 'sts:AssumeRole'
+    #                     Effect: Allow
+    #                     Principal:
+    #                         Service:
+    #                             - ecs-tasks.amazonaws.com
+    
+    # MailerTaskDefinition:
+    #     Type: AWS::ECS::TaskDefinition
+    #     DependsOn: MailerRole
+    #     Properties:
+    #         RequiresCompatibilities: 
+    #             - EC2
+    #         NetworkMode: bridge
+    #         ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+    #         TaskRoleArn:  !GetAtt MailerRole.Arn
+    #         ContainerDefinitions:
+    #             - 
+    #                 Name: MailerService
+    #                 Cpu: 128
+    #                 Memory: 128
+    #                 Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/mailer-service:latest
+    #                 PortMappings:
+    #                     - ContainerPort: 3000
+    #                 Environment: 
+    #                     - 
+    #                         Name: DATABASE_URI
+    #                         Value: !ImportValue MongoDB
+    #                     - 
+    #                         Name: SMTP_HOST
+    #                         Value: !Ref SMTPHost
+    #                     - 
+    #                         Name: SMTP_USER
+    #                         Value: !Ref SMTPUser
+    #                     - 
+    #                         Name: SMTP_PASSWORD
+    #                         Value: !Ref SMTPPassword
+    #                     -   
+    #                         Name: ENCRYPTION_KEY
+    #                         Value: !Ref EncryptionKey
+    #                     - 
+    #                         Name: STAGE
+    #                         Value: Production
+    #                     -
+    #                         Name: AWS_REGION
+    #                         Value: !Ref 'AWS::Region'
+
+    #                 LogConfiguration:
+    #                     LogDriver: awslogs
+    #                     Options:
+    #                         awslogs-group: Mailer
+    #                         awslogs-region: !Ref AWS::Region
+    #                         awslogs-stream-prefix: service
+    
+    # TestMailerTaskDefinition:
+    #     Type: AWS::ECS::TaskDefinition
+    #     DependsOn: MailerRole
+    #     Properties:
+    #         RequiresCompatibilities: 
+    #             - EC2
+    #         NetworkMode: bridge
+    #         ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+    #         TaskRoleArn:  !GetAtt MailerRole.Arn
+    #         ContainerDefinitions:
+    #             - 
+    #                 Name: MailerService
+    #                 Cpu: 128
+    #                 Memory: 128
+    #                 Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/mailer-service:latest
+    #                 PortMappings:
+    #                     - ContainerPort: 3000
+    #                 Environment: 
+    #                     - 
+    #                         Name: DATABASE_URI
+    #                         Value: !ImportValue TestMongoDB
+    #                     - 
+    #                         Name: SMTP_HOST
+    #                         Value: !Ref SMTPHost
+    #                     - 
+    #                         Name: SMTP_USER
+    #                         Value: !Ref SMTPUser
+    #                     - 
+    #                         Name: SMTP_PASSWORD
+    #                         Value: !Ref SMTPPassword
+    #                     -   
+    #                         Name: ENCRYPTION_KEY
+    #                         Value: 123456789abcdefghijklmnopqrstuvw
+    #                     - 
+    #                         Name: STAGE
+    #                         Value: Test
+    #                     -
+    #                         Name: AWS_REGION
+    #                         Value: !Ref 'AWS::Region'
+
+    #                 LogConfiguration:
+    #                     LogDriver: awslogs
+    #                     Options:
+    #                         awslogs-group: MailerTest
+    #                         awslogs-region: !Ref AWS::Region
+    #                         awslogs-stream-prefix: service
+
+    # MailerEcsService:
+    #     Type: AWS::CloudFormation::Stack
+    #     Properties:
+    #         TemplateURL: !Sub
+    #             - https://s3.amazonaws.com/${Bucket}/cloudformation/microservice.yml
+    #             - { Bucket: !Ref TemplateBucket} 
+    #         Parameters: 
+    #             ServiceName: MailerService
+    #             RepositoryName: mailer-service
+    #             # TaskDefinition: !Ref MailerTaskDefinition
+    #             # ServiceCount: 2
+    #             GitHubUser: !Ref GitHubUser
+    #             GitHubRepo: !Ref GitHubRepo
+    #             GitHubBranch: !Ref GitHubBranch
+    #             GitHubToken: !Ref GitHubToken
+    #             BuildPath: ./BackEnd/Mailer
+    # ########      End Mailer      ########
+
+    ########      Companies      ########
+    CompanyLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties: 
+            LogGroupName: Company
+            RetentionInDays: 30
+    
+    TestCompanyLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties: 
+            LogGroupName: CompanyTest
+            RetentionInDays: 30
+    
+    CompanyRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Statement:
+                    - 
+                        Action:
+                            - 'sts:AssumeRole'
+                        Effect: Allow
+                        Principal:
+                            Service:
+                                - ecs-tasks.amazonaws.com
+    
+    CompanyTaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        DependsOn: CompanyRole
+        Properties:
+            RequiresCompatibilities: 
+                - EC2
+            NetworkMode: bridge
+            ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+            TaskRoleArn:  !GetAtt CompanyRole.Arn
+            ContainerDefinitions:
+                - 
+                    Name: CompanyService
+                    Cpu: 128
+                    Memory: 128
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/company-service:latest
+                    PortMappings:
+                        - ContainerPort: 3000
+                    Environment: 
+                        - 
+                            Name: DATABASE_URI
+                            Value: !ImportValue MongoDB
+                        - 
+                            Name: STAGE
+                            Value: Production
+                        -
+                            Name: AWS_REGION
+                            Value: !Ref 'AWS::Region'
+
+                    LogConfiguration:
+                        LogDriver: awslogs
+                        Options:
+                            awslogs-group: Company
+                            awslogs-region: !Ref AWS::Region
+                            awslogs-stream-prefix: service
+    
+    TestCompanyTaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        DependsOn: CompanyRole
+        Properties:
+            RequiresCompatibilities: 
+                - EC2
+            NetworkMode: bridge
+            ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+            TaskRoleArn:  !GetAtt CompanyRole.Arn
+            ContainerDefinitions:
+                - 
+                    Name: CompanyService
+                    Cpu: 128
+                    Memory: 128
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/company-service:latest
+                    PortMappings:
+                        - ContainerPort: 3000
+                    Environment: 
+                        - 
+                            Name: DATABASE_URI
+                            Value: !ImportValue TestMongoDB
+                        - 
+                            Name: STAGE
+                            Value: Test
+                        -
+                            Name: AWS_REGION
+                            Value: !Ref 'AWS::Region'
+
+                    LogConfiguration:
+                        LogDriver: awslogs
+                        Options:
+                            awslogs-group: CompanyTest
+                            awslogs-region: !Ref AWS::Region
+                            awslogs-stream-prefix: service
+
+    CompanyEcsService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: !Sub
+                - https://s3.amazonaws.com/${Bucket}/cloudformation/microservice.yml
+                - { Bucket: !Ref TemplateBucket} 
+            Parameters: 
+                ServiceName: CompanyService
+                RepositoryName: company-service
+                # TaskDefinition: !Ref MailerTaskDefinition
+                # ServiceCount: 2
+                GitHubUser: !Ref GitHubUser
+                GitHubRepo: !Ref GitHubRepo
+                GitHubBranch: !Ref GitHubBranch
+                GitHubToken: !Ref GitHubToken
+                BuildPath: ./BackEnd/Companies
+    ########     End Company      ########
+
+    ########      Keys      ########
+    KeysLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties: 
+            LogGroupName: Key
+            RetentionInDays: 30
+    
+    TestKeyLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties: 
+            LogGroupName: KeyTest
+            RetentionInDays: 30
+    
+    KeyRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Statement:
+                    - 
+                        Action:
+                            - 'sts:AssumeRole'
+                        Effect: Allow
+                        Principal:
+                            Service:
+                                - ecs-tasks.amazonaws.com
+    
+    KeyTaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        DependsOn: KeyRole
+        Properties:
+            RequiresCompatibilities: 
+                - EC2
+            NetworkMode: bridge
+            ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+            TaskRoleArn:  !GetAtt KeyRole.Arn
+            ContainerDefinitions:
+                - 
+                    Name: KeyService
+                    Cpu: 128
+                    Memory: 128
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/key-service:latest
+                    PortMappings:
+                        - ContainerPort: 3000
+                    Environment: 
+                        - 
+                            Name: DATABASE_URI
+                            Value: !ImportValue MongoDB
+                        - 
+                            Name: STAGE
+                            Value: Production
+                        -
+                            Name: AWS_REGION
+                            Value: !Ref 'AWS::Region'
+
+                    LogConfiguration:
+                        LogDriver: awslogs
+                        Options:
+                            awslogs-group: Key
+                            awslogs-region: !Ref AWS::Region
+                            awslogs-stream-prefix: service
+    
+    TestKeyTaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        DependsOn: KeyRole
+        Properties:
+            RequiresCompatibilities: 
+                - EC2
+            NetworkMode: bridge
+            ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+            TaskRoleArn:  !GetAtt KeyRole.Arn
+            ContainerDefinitions:
+                - 
+                    Name: KeyService
+                    Cpu: 128
+                    Memory: 128
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/key-service:latest
+                    PortMappings:
+                        - ContainerPort: 3000
+                    Environment: 
+                        - 
+                            Name: DATABASE_URI
+                            Value: !ImportValue TestMongoDB
+                        - 
+                            Name: STAGE
+                            Value: Test
+                        -
+                            Name: AWS_REGION
+                            Value: !Ref 'AWS::Region'
+
+                    LogConfiguration:
+                        LogDriver: awslogs
+                        Options:
+                            awslogs-group: KeyTest
+                            awslogs-region: !Ref AWS::Region
+                            awslogs-stream-prefix: service
+
+    KeyEcsService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: !Sub
+                - https://s3.amazonaws.com/${Bucket}/cloudformation/microservice.yml
+                - { Bucket: !Ref TemplateBucket} 
+            Parameters: 
+                ServiceName: KeyService
+                RepositoryName: key-service
+                # TaskDefinition: !Ref MailerTaskDefinition
+                # ServiceCount: 2
+                GitHubUser: !Ref GitHubUser
+                GitHubRepo: !Ref GitHubRepo
+                GitHubBranch: !Ref GitHubBranch
+                GitHubToken: !Ref GitHubToken
+                BuildPath: ./BackEnd/Keys
+    #########     End Keys      ########
+
+    ########      Invoices      ########
+    InvoicesLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties: 
+            LogGroupName: Invoice
+            RetentionInDays: 30
+    
+    TestInvoiceLogGroup:
+        Type: AWS::Logs::LogGroup
+        Properties: 
+            LogGroupName: InvoiceTest
+            RetentionInDays: 30
+    
+    InvoiceRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Statement:
+                    - 
+                        Action:
+                            - 'sts:AssumeRole'
+                        Effect: Allow
+                        Principal:
+                            Service:
+                                - ecs-tasks.amazonaws.com
+    
+    InvoiceTaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        DependsOn: InvoiceRole
+        Properties:
+            RequiresCompatibilities: 
+                - EC2
+            NetworkMode: bridge
+            ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+            TaskRoleArn:  !GetAtt InvoiceRole.Arn
+            ContainerDefinitions:
+                - 
+                    Name: InvoiceService
+                    Cpu: 128
+                    Memory: 128
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/invoice-service:latest
+                    PortMappings:
+                        - ContainerPort: 3000
+                    Environment: 
+                        - 
+                            Name: DATABASE_URI
+                            Value: !ImportValue MongoDB
+                        - 
+                            Name: STAGE
+                            Value: Production
+                        -
+                            Name: AWS_REGION
+                            Value: !Ref 'AWS::Region'
+
+                    LogConfiguration:
+                        LogDriver: awslogs
+                        Options:
+                            awslogs-group: Invoice
+                            awslogs-region: !Ref AWS::Region
+                            awslogs-stream-prefix: service
+    
+    TestInvoiceTaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        DependsOn: InvoiceRole
+        Properties:
+            RequiresCompatibilities: 
+                - EC2
+            NetworkMode: bridge
+            ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+            TaskRoleArn:  !GetAtt InvoiceRole.Arn
+            ContainerDefinitions:
+                - 
+                    Name: InvoiceService
+                    Cpu: 128
+                    Memory: 128
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/invoice-service:latest
+                    PortMappings:
+                        - ContainerPort: 3000
+                    Environment: 
+                        - 
+                            Name: DATABASE_URI
+                            Value: !ImportValue TestMongoDB
+                        - 
+                            Name: STAGE
+                            Value: Test
+                        -
+                            Name: AWS_REGION
+                            Value: !Ref 'AWS::Region'
+
+                    LogConfiguration:
+                        LogDriver: awslogs
+                        Options:
+                            awslogs-group: InvoiceTest
+                            awslogs-region: !Ref AWS::Region
+                            awslogs-stream-prefix: service
+
+    InvoiceEcsService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: !Sub
+                - https://s3.amazonaws.com/${Bucket}/cloudformation/microservice.yml
+                - { Bucket: !Ref TemplateBucket} 
+            Parameters: 
+                ServiceName: InvoiceService
+                RepositoryName: invoice-service
+                # TaskDefinition: !Ref MailerTaskDefinition
+                # ServiceCount: 2
+                GitHubUser: !Ref GitHubUser
+                GitHubRepo: !Ref GitHubRepo
+                GitHubBranch: !Ref GitHubBranch
+                GitHubToken: !Ref GitHubToken
+                BuildPath: ./BackEnd/Invoices
+    # ########     End Invoices      ########

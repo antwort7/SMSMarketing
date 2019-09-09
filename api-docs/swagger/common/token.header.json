@@ -1,0 +1,7 @@
+{
+    "name": "Authorization",
+    "in": "header",
+    "description": "The authentication token. Format must be JWT [space] [Token]. i.e JWT eya34sd...",
+    "required": true,
+    "type": "string"
+}

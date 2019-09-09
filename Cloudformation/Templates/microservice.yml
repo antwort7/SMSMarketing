@@ -1,0 +1,325 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a service on AWS Fargate, hosted in a public subnet, and accessible via a public load balancer.
+Parameters:
+    ServiceName:
+        Type: String
+        Description: The service name
+
+    RepositoryName:
+        Type: String
+
+    # TaskDefinition:
+    #     Type: String
+    #     Description: The service task definition
+    
+    # ServiceCount:
+    #     Type: Number
+    #     Default: 2
+    #     Description: How many copies of the service task to run
+    
+    GitHubRepo:
+        Type: String
+
+    GitHubBranch:
+        Type: String
+
+    GitHubToken:
+        Type: String
+        NoEcho: true
+        Description: https://github.com/settings/tokens
+
+    GitHubUser:
+        Type: String
+
+    BuildPath:
+        Type: String
+
+Resources:
+    # ServiceRegistry:
+    #     Type: "AWS::ServiceDiscovery::Service"
+    #     Properties:
+    #         DnsConfig: 
+    #             DnsRecords: 
+    #                 - 
+    #                     Type: A
+    #                     TTL: 300
+    #             NamespaceId: !ImportValue Namespace
+    #         HealthCheckCustomConfig:
+    #             FailureThreshold: 1
+    #         Name: 
+    #             !Join
+    #             - ''
+    #             - 
+    #                 -  !Ref ServiceName
+    #                 -  Registry
+
+    # Service:
+    #     Type: AWS::ECS::Service
+    #     Properties:
+    #         ServiceName: !Ref ServiceName
+    #         Cluster: !ImportValue ECSClusterName
+    #         DeploymentConfiguration:
+    #             MaximumPercent: 100
+    #             MinimumHealthyPercent: 0
+    #         DesiredCount: !Ref ServiceCount
+    #         TaskDefinition: !Ref TaskDefinition
+    #         ServiceRegistries: 
+    #             -
+    #                 RegistryArn: !GetAtt ServiceRegistry.Arn
+    #         LaunchType: EC2
+    #         NetworkConfiguration: 
+    #             AwsvpcConfiguration:
+    #                 AssignPublicIp: ENABLED
+    #                 SecurityGroups: 
+    #                     - !ImportValue MainSecurityGroup
+    #                     - !ImportValue ECSContainerSecurityGroup
+    #                 Subnets: !Split [ ",", !ImportValue Subnets ]
+
+    Repository:
+        Type: AWS::ECR::Repository
+        DeletionPolicy: Retain
+        Properties: 
+            RepositoryName: !Ref RepositoryName
+    
+    ProductionQueue:
+        Type: AWS::SQS::Queue
+        Properties:
+            QueueName: !Join
+                - ''
+                - 
+                    -  !Ref ServiceName
+                    -  ProductionQueue
+            ReceiveMessageWaitTimeSeconds: 20
+    
+    TestQueue:
+        Type: AWS::SQS::Queue
+        Properties:
+            QueueName: !Join
+                - ''
+                - 
+                    -  !Ref ServiceName
+                    -  TestQueue
+            ReceiveMessageWaitTimeSeconds: 20
+    
+    DevQueue:
+        Type: AWS::SQS::Queue
+        Properties:
+            QueueName: !Join
+                - ''
+                - 
+                    -  !Ref ServiceName
+                    -  DevQueue
+            ReceiveMessageWaitTimeSeconds: 20
+
+    ServiceBuild:
+        Type: AWS::CodeBuild::Project
+        Properties:
+            Artifacts:
+                Type: CODEPIPELINE
+            Source:
+                Type: CODEPIPELINE
+                BuildSpec: |
+                    version: 0.2
+                    phases:
+                        pre_build:
+                            commands:
+                                - $(aws ecr get-login --no-include-email)
+                                - TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
+                                - IMAGE_URI="${REPOSITORY_URI}:${TAG}"
+                                - LATEST_IMAGE_URI="${REPOSITORY_URI}:latest"
+                        build:
+                            commands:
+                                - docker build --tag "$IMAGE_URI" --tag "$LATEST_IMAGE_URI" $BUILD_PATH
+                        post_build:
+                            commands:
+                                - docker push "$IMAGE_URI"
+                                - docker push "$LATEST_IMAGE_URI"
+                                - printf '[{"name":"%s","imageUri":"%s"}]' "$SERVICE_NAME" "$IMAGE_URI" > prod.json
+                                - printf '[{"name":"%s","imageUri":"%s"}]' "$SERVICE_NAME" "$LATEST_IMAGE_URI" > test.json
+                    artifacts:
+                        files: 
+                            - prod.json
+                            - test.json
+
+            Environment:
+                ComputeType: BUILD_GENERAL1_SMALL
+                Image: aws/codebuild/docker:17.09.0
+                Type: LINUX_CONTAINER
+                EnvironmentVariables:
+                -
+                    Name: AWS_DEFAULT_REGION
+                    Value: !Ref AWS::Region
+                - 
+                    Name: REPOSITORY_URI
+                    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}
+                -
+                    Name: SERVICE_NAME
+                    Value: !Ref ServiceName
+                -   
+                    Name: BUILD_PATH
+                    Value: !Ref BuildPath
+            Name: !Join
+                - '-'
+                - 
+                    -  !Ref ServiceName
+                    -  Build
+            Cache: 
+                Type: S3
+                Location: 
+                    !Join
+                        - ''
+                        - 
+                            -  !ImportValue Bucket
+                            -  !Join
+                                - '/'
+                                - 
+                                    - ''
+                                    - build
+                                    - !Ref ServiceName
+            ServiceRole: !ImportValue CodeBuildServiceRole
+
+    Pipeline:
+        Type: AWS::CodePipeline::Pipeline
+        Properties:
+            RoleArn: !ImportValue CodePipelineServiceRoleArn
+            RestartExecutionOnUpdate: false
+            ArtifactStore:
+                Type: S3
+                Location: !ImportValue Bucket
+            Stages:
+                -   #Retrieve the source code from cannedhead-services repository
+                    Name: Source
+                    Actions:
+                        - 
+                            Name: Source
+                            ActionTypeId:
+                                Category: Source
+                                Owner: ThirdParty
+                                Version: 1
+                                Provider: GitHub
+                            Configuration:
+                                Owner: !Ref GitHubUser
+                                Repo: !Ref GitHubRepo
+                                Branch: !Ref GitHubBranch
+                                OAuthToken: !Ref GitHubToken
+                                PollForSourceChanges: false
+                            OutputArtifacts:
+                                - Name: src
+                            RunOrder: 1
+                -   #Build the authorizer and upload templates in parallel
+                    Name: Build
+                    Actions:
+                        - 
+                            Name: !Join
+                                - '-'
+                                - 
+                                    -  !Ref ServiceName
+                                    -  Build
+                            ActionTypeId:
+                                Category: Build
+                                Owner: AWS
+                                Version: 1
+                                Provider: CodeBuild
+                            Configuration:
+                                ProjectName: !Ref ServiceBuild
+                            InputArtifacts:
+                                - Name: src
+                            OutputArtifacts:
+                                - Name: !Join
+                                    - '-'
+                                    - 
+                                        -  !Ref ServiceName
+                                        -  Build
+                            RunOrder: 1
+                -  
+                    Name: DeployTest
+                    Actions:
+                        - 
+                            Name: !Join
+                                - '-'
+                                - 
+                                    -  !Ref ServiceName
+                                    -  Deploy
+                            ActionTypeId:
+                                Category: Deploy
+                                Owner: AWS
+                                Version: 1
+                                Provider: ECS
+                            Configuration:
+                                ClusterName: !ImportValue TestECSClusterName
+                                ServiceName: !Ref ServiceName
+                                FileName: test.json
+                            InputArtifacts:
+                                - Name: !Join
+                                    - '-'
+                                    - 
+                                        -  !Ref ServiceName
+                                        -  Build
+                            RunOrder: 1
+                - 
+                    Name: Approve
+                    Actions:
+                        - 
+                            InputArtifacts: []
+                            Name: SendToProduction
+                            ActionTypeId:
+                                Category: Approval
+                                Owner: AWS
+                                Version: '1'
+                                Provider: Manual
+                            OutputArtifacts: []
+                            Configuration: {}
+                            RunOrder: 1
+                -  
+                    Name: Deploy
+                    Actions:
+                        - 
+                            Name: !Join
+                                - '-'
+                                - 
+                                    -  !Ref ServiceName
+                                    -  Deploy
+                            ActionTypeId:
+                                Category: Deploy
+                                Owner: AWS
+                                Version: 1
+                                Provider: ECS
+                            Configuration:
+                                ClusterName: !ImportValue ECSClusterName
+                                ServiceName: !Ref ServiceName
+                                FileName: prod.json
+                            InputArtifacts:
+                                - Name: !Join
+                                    - '-'
+                                    - 
+                                        -  !Ref ServiceName
+                                        -  Build
+                            RunOrder: 1
+
+Outputs:
+    ProductionQueue:
+        Value: !GetAtt ProductionQueue.Arn
+        Export: 
+            Name: !Join
+                - ''
+                - 
+                    -  !Ref ServiceName
+                    -  ProductionQueue
+    
+    TestQueue:
+        Value: !GetAtt TestQueue.Arn
+        Export: 
+            Name: !Join
+                - ''
+                - 
+                    -  !Ref ServiceName
+                    -  TestQueue
+    
+    DevQueue:
+        Value: !GetAtt DevQueue.Arn
+        Export: 
+            Name: !Join
+                - ''
+                - 
+                    -  !Ref ServiceName
+                    -  DevQueue

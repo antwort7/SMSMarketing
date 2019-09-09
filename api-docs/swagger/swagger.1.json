@@ -1,0 +1,37 @@
+{
+	"swagger": "2.0",
+	"info": {
+		"version": "1.0.0",
+		"title": "PliP",
+		"description": "Descripcion de api rest de PliP",
+		"termsOfService": "https://docs.plip.world/terminos-y-condiciones",
+		"contact": {
+			"name": "José Dominguez",
+			"url": "http://plip.world",
+			"email": "josedominguez@plip.world"
+		}
+	},
+	"host": "api.plip.world/v1.0",
+	"basePath": "/",
+	"schemes": [
+		"https"
+	],
+	"servers":[
+		{
+			"url": "https://api.plip.world",
+			"description": "Servidor de pruebas"
+		},
+		{
+			"url":"https://test.api.plip.world",
+			"description":"Servidor de producción"
+		}
+	],
+	"paths": {
+		"/invoices":{
+			"$ref":"./resources/invoices/api.invoices.json"
+		},
+		"/assign-user":{
+			"$ref":"./resources/invoices/api.assignUsers.json"
+		}
+	}
+}
