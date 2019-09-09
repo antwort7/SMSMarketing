@@ -1,7 +1,7 @@
 FROM node:carbon
 
-WORKDIR /Companies
-ADD . /Companies
+WORKDIR /Registrations
+ADD . /Registrations
 RUN yarn install
 
 CMD ["node", "server.js"]

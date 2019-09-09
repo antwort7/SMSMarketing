@@ -5,9 +5,9 @@ const LocationSchema = new mongoose.Schema({
 		type: String,
 		required: 'location name is a required field',
 	},
-	company: {
+	registration: {
 		type: mongoose.Schema.Types.ObjectId,
-		required: 'location company is a required field',
+		required: 'location registration is a required field',
 	},
 	address: {
 		type: {

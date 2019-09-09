@@ -10,6 +10,6 @@ require('./app')
 		app.set('port', process.env.PORT || 3000)
 		app.listen(app.get('port'), () => {
 			const port = app.get('port')
-			console.log(`Running company service on port ${port}`)
+			console.log(`Running registration service on port ${port}`)
 		})
 	})

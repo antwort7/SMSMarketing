@@ -7,8 +7,8 @@ RUN echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
 RUN yarn global add gulp
 RUN yarn add gulp
 
-WORKDIR /Companies
-ADD ./BackEnd/Companies/package.json /Companies/package.json
+WORKDIR /Registrations
+ADD ./BackEnd/Registrations/package.json /Registrations/package.json
 
 RUN yarn install
 

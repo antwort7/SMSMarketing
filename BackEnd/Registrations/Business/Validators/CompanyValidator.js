@@ -8,14 +8,14 @@ const DataLoaders = require('../DataLoaders')
 
 const CustomError = require('../../CustomError')
 
-module.exports.init = ({ CompanyPersistence }) => ({
+module.exports.init = ({ RegistrationPersistence }) => ({
 	create: Validator({
 		validators: {
-			verifyNameDuplicate: ({ company }) => new Promise((resolve, reject) => {
-				CompanyPersistence.getCompanies({ filter: { name: company.name } })
-					.then((companies) => {
-						if (companies.length > 0) {
-							reject(new CustomError(CustomError.errors.DUPLICATE, 'A company already has this name'))
+			verifyNameDuplicate: ({ registration }) => new Promise((resolve, reject) => {
+				RegistrationPersistence.getRegistrations({ filter: { name: registration.name } })
+					.then((Registration) => {
+						if (Registration.length > 0) {
+							reject(new CustomError(CustomError.errors.DUPLICATE, 'A registration already has this name'))
 						}
 						else {
 							resolve()
@@ -65,12 +65,12 @@ module.exports.init = ({ CompanyPersistence }) => ({
 	}),
 	update: Validator({
 		validators: {
-			verifyExistence: ({ id }) => DataLoaders.instance().companyLoader().load(id),
+			verifyExistence: ({ id }) => DataLoaders.instance().registrationLoader().load(id),
 		},
 	}),
 	delete: Validator({
 		validators: {
-			verifyExistence: ({ id }) => DataLoaders.instance().companyLoader().load(id),
+			verifyExistence: ({ id }) => DataLoaders.instance().registrationLoader().load(id),
 		},
 	}),
 })

@@ -1,7 +1,7 @@
-const CompanyLogic = require('./CompanyLogic')
+const RegistrationLogic = require('./RegistrationLogic')
 const LocationLogic = require('./LocationLogic')
 
 module.exports.init = (validators, persistence) => ({
-	CompanyLogic: CompanyLogic(validators, persistence),
+	RegistrationLogic: RegistrationLogic(validators, persistence),
 	LocationLogic: LocationLogic(validators, persistence),
 })

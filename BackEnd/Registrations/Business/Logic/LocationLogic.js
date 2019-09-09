@@ -2,8 +2,8 @@ const DataLoaders = require('../DataLoaders')
 
 module.exports = ({ LocationValidator }, { LocationPersistence }) => {
 	return {
-		createLocation: (company, location) => LocationValidator.create.validate({ company, location })
-			.then(() => LocationPersistence.createLocation({ ...location, company })),
+		createLocation: (registration, location) => LocationValidator.create.validate({ registration, location })
+			.then(() => LocationPersistence.createLocation({ ...location, registration })),
 
 		getLocations: ({ lastSeen, ...params }) => LocationValidator.getAll.validate(params.filter)
 			.then((transformedFilter) => {

@@ -1,26 +1,26 @@
 const DataLoaders = require('../DataLoaders')
 
-module.exports = ({ CompanyValidator }, { CompanyPersistence }) => {
+module.exports = ({ RegistrationValidator }, { RegistrationPersistence }) => {
 	return {
-		createCompany: company => CompanyValidator.create.validate({ company })
+		createRegistration: registration => RegistrationValidator.create.validate({ registration })
 			.then(() => {
-				return CompanyPersistence.createCompany(company)
+				return RegistrationPersistence.createRegistration(registration)
 			}),
 
-		getCompanies: ({ lastSeen, ...params }) => CompanyValidator.getAll.validate(params.filter)
+		getRegistrations: ({ lastSeen, ...params }) => RegistrationValidator.getAll.validate(params.filter)
 			.then((transformedFilter) => {
 				params.filter = transformedFilter
 				params.lastSeen = lastSeen
-				return CompanyPersistence.getCompanies(params)
+				return RegistrationPersistence.getRegistrations(params)
 			}),
 
-		updateCompany: (id, company) => CompanyValidator.update.validate({ id, company })
-			.then(() => CompanyPersistence.updateCompany(id, company)),
+		updateRegistration: (id, registration) => RegistrationValidator.update.validate({ id, registration })
+			.then(() => RegistrationPersistence.updateRegistration(id, registration)),
 
-		deleteCompany: id => CompanyValidator.delete.validate({ id })
-			.then(() => CompanyPersistence.updateCompany(id, { deleted: true })),
+		deleteRegistration: id => RegistrationValidator.delete.validate({ id })
+			.then(() => RegistrationPersistence.updateRegistration(id, { deleted: true })),
 
-		getBatchCompanies: ids => DataLoaders.instance().companyLoader(false).loadMany(ids),
+		getBatchRegistrations: ids => DataLoaders.instance().registrationLoader(false).loadMany(ids),
 
 	}
 }

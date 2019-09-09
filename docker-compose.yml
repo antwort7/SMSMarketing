@@ -2,7 +2,7 @@ version: '3.6'
 
 volumes:
   gateway_modules:
-  companies_modules:
+  Registration_modules:
   keys_modules:
   invoices_modules:
 
@@ -18,7 +18,7 @@ services:
       - '3001:3000'
       - '9229:9229'
     depends_on:
-      - company
+      - registration
       - keys
       - invoice
     environment:
@@ -31,17 +31,17 @@ services:
       - APN_PLATFORM_APPLICATION=${APN_PLATFORM_APPLICATION}
       - GCM_PLATFORM_APPLICATION=${GCM_PLATFORM_APPLICATION}
       - KEY_SERVICE=http://keys:3000
-      - COMPANY_SERVICE=http://company:3000
+      - REGISTRATION_SERVICE=http://registration:3000
       - INVOICE_SERVICE=http://invoice:3000
       - STAGE=dev
   
-  company:
+  registration:
     build: 
       context: .
-      dockerfile: ./BackEnd/Companies/Dockerfile.dev
+      dockerfile: ./BackEnd/Registrations/Dockerfile.dev
     volumes:
-      - ./BackEnd/Companies:/Companies
-      - companies_modules:/Companies/node_modules
+      - ./BackEnd/Registrations:/Registrations
+      - Registration_modules:/Registrations/node_modules
     ports:
       - '3002:3000'
       - '9230:9229'

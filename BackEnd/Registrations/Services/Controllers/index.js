@@ -1,8 +1,8 @@
-const CompanyController = require('./CompanyController')
+const RegistrationController = require('./RegistrationController')
 
 const LocationController = require('./LocationController')
 
 module.exports = logic => ({
-	CompanyController: CompanyController(logic),
+	RegistrationController: RegistrationController(logic),
 	LocationController: LocationController(logic),
 })

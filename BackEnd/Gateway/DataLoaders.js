@@ -33,12 +33,7 @@ const generateLoaderPath = (baseUrl, path) => {
 }
 
 let instance = {
-	companyLoader: () => new Error('Loader not initialized'),
-	locationLoader: () => new Error('Loader not initialized'),
-	keyLoader: () => new Error('Loader not initialized'),
-	invoiceLoader: () => new Error('Loader not initialized'),
-	reportLoader: () => new Error('Loader not initialized'),
-	categoryLoader: () => new Error('Loader not initialized'),
+	registrationLoader: () => new Error('Loader not initialized'),
 }
 
 const getInstance = () => {
@@ -53,7 +48,7 @@ module.exports.instance = () => getInstance()
 module.exports.init = () => {
 	const initialize = () => {
 		instance = {
-			companyLoader: (error = true) => new DataLoader(keys => generateLoaderPath(process.env.COMPANY_SERVICE, '/companies/batch')
+			registrationLoader: (error = true) => new DataLoader(keys => generateLoaderPath(process.env.REGISTRATION_SERVICE, '/Registration/batch')
 				.then(url => request({
 					method: 'POST',
 					uri: `${url}`,
@@ -63,98 +58,13 @@ module.exports.init = () => {
 				.then(results => results.map((val, i) => {
 					if (!val) {
 						if (error) {
-							return new CustomError(CustomError.errors.NOT_FOUND, `Company not found: ${keys[i]}`)
+							return new CustomError(CustomError.errors.NOT_FOUND, `Registration not found: ${keys[i]}`)
 						}
 						return null
 					}
 					return val
 				}))
-				.catch(() => new CustomError(CustomError.errors.SERVICE_ERROR, 'company service failed'))),
-			locationLoader: (error = true) => new DataLoader(keys => generateLoaderPath(process.env.COMPANY_SERVICE, '/locations/batch')
-				.then(url => request({
-					method: 'POST',
-					uri: `${url}`,
-					body: { ids: keys },
-					json: true,
-				}))
-				.then(results => results.map((val, i) => {
-					if (!val) {
-						if (error) {
-							return new CustomError(CustomError.errors.NOT_FOUND, `Location not found: ${keys[i]}`)
-						}
-						return null
-					}
-					return val
-				}))
-				.catch(() => new CustomError(CustomError.errors.SERVICE_ERROR, 'company service failed'))),
-			keyLoader: (error = true) => new DataLoader(keys => generateLoaderPath(process.env.KEY_SERVICE, '/keys/batch')
-				.then(url => request({
-					method: 'POST',
-					uri: `${url}`,
-					body: { ids: keys },
-					json: true,
-				}))
-				.then(results => results.map((val, i) => {
-					if (!val) {
-						if (error) {
-							return new CustomError(CustomError.errors.NOT_FOUND, `Key not found: ${keys[i]}`)
-						}
-						return null
-					}
-					return val
-				}))
-				.catch(() => new CustomError(CustomError.errors.SERVICE_ERROR, 'key service failed'))),
-			invoiceLoader: (error = true) => new DataLoader(keys => generateLoaderPath(process.env.INVOICE_SERVICE, '/invoices/batch')
-				.then(url => request({
-					method: 'POST',
-					uri: `${url}`,
-					body: { ids: keys },
-					json: true,
-				}))
-				.then(results => results.map((val, i) => {
-					if (!val) {
-						if (error) {
-							return new CustomError(CustomError.errors.NOT_FOUND, `Invoice not found: ${keys[i]}`)
-						}
-						return null
-					}
-					return val
-				}))
-				.catch(() => new CustomError(CustomError.errors.SERVICE_ERROR, 'Invoice service failed'))),
-			reportLoader: (error = true) => new DataLoader(keys => generateLoaderPath(process.env.INVOICE_SERVICE, '/invoices/report/batch')
-				.then(url => request({
-					method: 'POST',
-					uri: `${url}`,
-					body: { ids: keys },
-					json: true,
-				}))
-				.then(results => results.map((val, i) => {
-					if (!val) {
-						if (error) {
-							return new CustomError(CustomError.errors.NOT_FOUND, `Report not found: ${keys[i]}`)
-						}
-						return null
-					}
-					return val
-				}))
-				.catch(() => new CustomError(CustomError.errors.SERVICE_ERROR, 'Report service failed'))),
-			categoryLoader: (error = true) => new DataLoader(keys => generateLoaderPath(process.env.INVOICE_SERVICE, '/categories/batch')
-				.then(url => request({
-					method: 'POST',
-					uri: `${url}`,
-					body: { ids: keys },
-					json: true,
-				}))
-				.then(results => results.map((val, i) => {
-					if (!val) {
-						if (error) {
-							return new CustomError(CustomError.errors.NOT_FOUND, `Category not found: ${keys[i]}`)
-						}
-						return null
-					}
-					return val
-				}))
-				.catch(() => new CustomError(CustomError.errors.SERVICE_ERROR, 'Category service failed'))),
+				.catch(() => new CustomError(CustomError.errors.SERVICE_ERROR, 'registration service failed'))),
 			}
 		return instance
 	}

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const CompanySchema = new mongoose.Schema({
+const RegistrationSchema = new mongoose.Schema({
 	name: {
 		type: String,
 		required: 'chain name is a required field',
@@ -39,4 +39,4 @@ const CompanySchema = new mongoose.Schema({
 	usePushEach: true,
 })
 
-module.exports = mongoose.model('Company', CompanySchema)
+module.exports = mongoose.model('Registration', RegistrationSchema)

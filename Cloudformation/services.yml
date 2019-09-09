@@ -196,8 +196,8 @@ Resources:
                             Name: KEY_SERVICE
                             Value: http://keys.plip
                         -
-                            Name: COMPANY_SERVICE
-                            Value: http://companies.plip
+                            Name: REGISTRATION_SERVICE
+                            Value: http://Registration.plip
                         -
                             Name: INVOICE_SERVICE
                             Value: http://invoices.plip
@@ -255,8 +255,8 @@ Resources:
                             Name: KEY_SERVICE
                             Value: http://test.keys.plip
                         -
-                            Name: COMPANY_SERVICE
-                            Value: http://test.companies.plip
+                            Name: REGISTRATION_SERVICE
+                            Value: http://test.Registration.plip
                         -
                             Name: INVOICE_SERVICE
                             Value: http://test.invoices.plip
@@ -653,20 +653,20 @@ Resources:
     #             BuildPath: ./BackEnd/Mailer
     # ########      End Mailer      ########
 
-    ########      Companies      ########
-    CompanyLogGroup:
+    ########      Registrations      ########
+    RegistrationLogGroup:
         Type: AWS::Logs::LogGroup
         Properties: 
-            LogGroupName: Company
+            LogGroupName: Registration
             RetentionInDays: 30
     
-    TestCompanyLogGroup:
+    TestRegistrationLogGroup:
         Type: AWS::Logs::LogGroup
         Properties: 
-            LogGroupName: CompanyTest
+            LogGroupName: RegistrationTest
             RetentionInDays: 30
     
-    CompanyRole:
+    RegistrationRole:
         Type: AWS::IAM::Role
         Properties:
             AssumeRolePolicyDocument:
@@ -679,21 +679,21 @@ Resources:
                             Service:
                                 - ecs-tasks.amazonaws.com
     
-    CompanyTaskDefinition:
+    RegistrationTaskDefinition:
         Type: AWS::ECS::TaskDefinition
-        DependsOn: CompanyRole
+        DependsOn: RegistrationRole
         Properties:
             RequiresCompatibilities: 
                 - EC2
             NetworkMode: bridge
             ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
-            TaskRoleArn:  !GetAtt CompanyRole.Arn
+            TaskRoleArn:  !GetAtt RegistrationRole.Arn
             ContainerDefinitions:
                 - 
-                    Name: CompanyService
+                    Name: RegistrationService
                     Cpu: 128
                     Memory: 128
-                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/company-service:latest
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/registration-service:latest
                     PortMappings:
                         - ContainerPort: 3000
                     Environment: 
@@ -710,25 +710,25 @@ Resources:
                     LogConfiguration:
                         LogDriver: awslogs
                         Options:
-                            awslogs-group: Company
+                            awslogs-group: Registration
                             awslogs-region: !Ref AWS::Region
                             awslogs-stream-prefix: service
     
-    TestCompanyTaskDefinition:
+    TestRegistrationTaskDefinition:
         Type: AWS::ECS::TaskDefinition
-        DependsOn: CompanyRole
+        DependsOn: RegistrationRole
         Properties:
             RequiresCompatibilities: 
                 - EC2
             NetworkMode: bridge
             ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
-            TaskRoleArn:  !GetAtt CompanyRole.Arn
+            TaskRoleArn:  !GetAtt RegistrationRole.Arn
             ContainerDefinitions:
                 - 
-                    Name: CompanyService
+                    Name: RegistrationService
                     Cpu: 128
                     Memory: 128
-                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/company-service:latest
+                    Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/registration-service:latest
                     PortMappings:
                         - ContainerPort: 3000
                     Environment: 
@@ -745,27 +745,27 @@ Resources:
                     LogConfiguration:
                         LogDriver: awslogs
                         Options:
-                            awslogs-group: CompanyTest
+                            awslogs-group: RegistrationTest
                             awslogs-region: !Ref AWS::Region
                             awslogs-stream-prefix: service
 
-    CompanyEcsService:
+    RegistrationEcsService:
         Type: AWS::CloudFormation::Stack
         Properties:
             TemplateURL: !Sub
                 - https://s3.amazonaws.com/${Bucket}/cloudformation/microservice.yml
                 - { Bucket: !Ref TemplateBucket} 
             Parameters: 
-                ServiceName: CompanyService
-                RepositoryName: company-service
+                ServiceName: RegistrationService
+                RepositoryName: registration-service
                 # TaskDefinition: !Ref MailerTaskDefinition
                 # ServiceCount: 2
                 GitHubUser: !Ref GitHubUser
                 GitHubRepo: !Ref GitHubRepo
                 GitHubBranch: !Ref GitHubBranch
                 GitHubToken: !Ref GitHubToken
-                BuildPath: ./BackEnd/Companies
-    ########     End Company      ########
+                BuildPath: ./BackEnd/Registrations
+    ########     End Registration      ########
 
     ########      Keys      ########
     KeysLogGroup:

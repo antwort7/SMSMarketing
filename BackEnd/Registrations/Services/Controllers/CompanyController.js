@@ -37,31 +37,31 @@ const generateToken = (collection) => {
 	return responseToken
 }
 
-module.exports = ({ CompanyLogic, LocationLogic }) => ({
+module.exports = ({ RegistrationLogic, LocationLogic }) => ({
 
-	createCompany: (req, res, next) => CompanyLogic.createCompany(req.body)
-		.then(company => res.json(company))
+	createRegistration: (req, res, next) => RegistrationLogic.createRegistration(req.body)
+		.then(registration => res.json(registration))
 		.catch(next),
 
-	readCompanies: (req, res, next) => {
+	readRegistrations: (req, res, next) => {
 		const query = parseQuery(req.query)
-		return CompanyLogic.getCompanies(query)
-			.then((companies) => {
-				const responseToken = generateToken(companies)
-				res.json({ companies, token: responseToken })
+		return RegistrationLogic.getRegistrations(query)
+			.then((Registration) => {
+				const responseToken = generateToken(Registration)
+				res.json({ Registration, token: responseToken })
 			})
 			.catch(next)
 	},
 
-	updateCompany: (req, res, next) => CompanyLogic.updateCompany(req.params.id, req.body)
-		.then(updatedCompany => res.json(updatedCompany))
+	updateRegistration: (req, res, next) => RegistrationLogic.updateRegistration(req.params.id, req.body)
+		.then(updatedRegistration => res.json(updatedRegistration))
 		.catch(next),
 
-	deleteCompany: (req, res, next) => CompanyLogic.deleteCompany(req.params.id)
-		.then(company => res.json(company))
+	deleteRegistration: (req, res, next) => RegistrationLogic.deleteRegistration(req.params.id)
+		.then(registration => res.json(registration))
 		.catch(next),
 
-	readBatchCompanies: (req, res, next) => CompanyLogic.getBatchCompanies(req.body.ids)
+	readBatchRegistrations: (req, res, next) => RegistrationLogic.getBatchRegistrations(req.body.ids)
 		.then(results => res.json(results))
 		.catch(next),
 

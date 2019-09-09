@@ -9,7 +9,7 @@ const DataLoaders = require('../DataLoaders')
 module.exports.init = () => ({
 	create: Validator({
 		validators: {
-			verifyCompanyExistence: ({ company }) => DataLoaders.instance().companyLoader().load(company),
+			verifyRegistrationExistence: ({ registration }) => DataLoaders.instance().registrationLoader().load(registration),
 		},
 	}),
 	getAll: Validator({
