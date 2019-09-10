@@ -65,8 +65,4 @@ module.exports = ({ RegistrationLogic, LocationLogic }) => ({
 		.then(results => res.json(results))
 		.catch(next),
 
-	createLocation: (req, res, next) => LocationLogic.createLocation(req.params.id, req.body)
-		.then(location => res.json(location))
-		.catch(next),
-
 })

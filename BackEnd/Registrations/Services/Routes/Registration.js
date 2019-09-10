@@ -7,9 +7,6 @@ module.exports = ({ RegistrationController }) => {
 		.post(RegistrationController.createRegistration)
 		.get(RegistrationController.readRegistrations)
 
-	router.route('/:id/locations')
-		.post(RegistrationController.createLocation)
-
 	router.route('/:id')
 		.put(RegistrationController.updateRegistration)
 		.delete(RegistrationController.deleteRegistration)

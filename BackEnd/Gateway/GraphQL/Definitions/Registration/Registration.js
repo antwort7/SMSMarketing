@@ -1,5 +1,5 @@
 const {
-	GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLList, GraphQLInputObjectType, GraphQLID, GraphQLInt, GraphQLBoolean,
+	GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLList, GraphQLInputObjectType, GraphQLID, GraphQLInt, GraphQLBoolean, GraphQLEnumType
 } = require('graphql')
 
 const Common = require('../Common')

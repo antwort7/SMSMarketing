@@ -2,7 +2,7 @@ const Registration = require('./Registration')
 const User = require('./User')
 
 const registration = Registration({})
-const user = User({ Invoice: invoice.Models })
+const user = User({})
 
 module.exports = {
 	Procedures: {

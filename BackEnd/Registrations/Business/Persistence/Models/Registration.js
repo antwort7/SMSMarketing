@@ -1,26 +1,24 @@
 const mongoose = require('mongoose')
 
 const RegistrationSchema = new mongoose.Schema({
-	name: {
+	sender: {
+		type: String
+	},
+	senderMessage: {
+		type: String
+	},
+	recipientPhone: {
+		type: String
+	},
+	recipientMessage: {
+		type: String
+	},
+	deliveryDate: {
+		type: Date
+	},
+	status: {
 		type: String,
-		required: 'chain name is a required field',
-	},
-	document: {
-		type: Object,
-	},
-	contact: {
-		type: Object,
-	},
-	logo: {
-		type: String,
-	},
-	baseMeasurement: {
-		type: Number,
-		default: 10,
-	},
-	lineMeasurement: {
-		type: Number,
-		default: 0.5,
+		default: 'Pending'
 	},
 	deleted: {
 		type: Boolean,
