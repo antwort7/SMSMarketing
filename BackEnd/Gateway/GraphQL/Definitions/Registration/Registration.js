@@ -28,12 +28,12 @@ module.exports.Models = ({ Common }, Model) => {
 					type: GraphQLString,
 				},
 				recipientPhone: {
-					type: GraphQLNonNull(GraphQLString),
+					type: GraphQLList(GraphQLString),
 				},
 				recipientMessage: {
 					type: GraphQLNonNull(GraphQLString),
 				},
-				deiveryDate: {
+				deliveryDate: {
 					type: GraphQLNonNull(Common.DateTime),
 				},
 				status: {
@@ -56,7 +56,7 @@ module.exports.Models = ({ Common }, Model) => {
 				recipientMessage: {
 					type: GraphQLNonNull(GraphQLString),
 				},
-				deiveryDate: {
+				deliveryDate: {
 					type: GraphQLNonNull(Common.DateTime),
 				}
 			}),

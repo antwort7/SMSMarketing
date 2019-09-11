@@ -1,5 +1,5 @@
 const RegistrationRoutes = require('./Registration')
 
 module.exports = controllers => ({
-	Registration: RegistrationRoutes(controllers),
+	registrations: RegistrationRoutes(controllers),
 })

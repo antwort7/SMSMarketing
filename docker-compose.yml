@@ -24,7 +24,6 @@ services:
       - AWS_COGNITO_POOLID=${AWS_COGNITO_POOLID}
       - BUCKET_NAME=${BUCKET}
       - REGISTRATION_SERVICE=http://registration:3000
-      - STAGE=dev
   
   registration:
     build: 

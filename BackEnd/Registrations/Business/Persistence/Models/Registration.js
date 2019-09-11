@@ -8,7 +8,7 @@ const RegistrationSchema = new mongoose.Schema({
 		type: String
 	},
 	recipientPhone: {
-		type: String
+		type: [String]
 	},
 	recipientMessage: {
 		type: String
