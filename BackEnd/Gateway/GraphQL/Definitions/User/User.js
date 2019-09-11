@@ -4,7 +4,7 @@ const {
 
 const { GraphQLUpload } = require('apollo-upload-server')
 
-module.exports.Models = ({ Common, Invoice }, Model) => ({
+module.exports.Models = ({ Common }, Model) => ({
 	Model: new GraphQLObjectType({
 		name: 'User',
 		description: 'A user',
@@ -26,10 +26,6 @@ module.exports.Models = ({ Common, Invoice }, Model) => ({
 			},
 			enabled: {
 				type: GraphQLNonNull(GraphQLBoolean),
-			},
-			report: {
-				type: Invoice.Invoice.Report,
-				resolve: Model.report,
 			},
 		}),
 	}),

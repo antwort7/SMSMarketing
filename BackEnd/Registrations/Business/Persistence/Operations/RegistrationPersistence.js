@@ -58,9 +58,9 @@ const filterCollection = (Collection, {
 	return Collection.find({ ...filter, deleted: false }).sort(sortBy).limit(limit)
 }
 
-module.exports = ({ Company }) => ({
-	createCompany: (company) => {
-		const newDocument = new Company(company)
+module.exports = ({ Registration }) => ({
+	createRegistration: (registration) => {
+		const newDocument = new Registration(registration)
 		return new Promise((resolve, reject) => {
 			newDocument.validate((err) => {
 				if (err) {
@@ -72,12 +72,12 @@ module.exports = ({ Company }) => ({
 			.then(() => newDocument.save())
 	},
 
-	getCompanies: ({
+	getRegistrations: ({
 		filter = {}, limit = 50, sortBy = '_id', lastSeen,
-	}) => filterCollection(Company, {
+	}) => filterCollection(Registration, {
 		filter, sortBy, limit, lastSeen,
 	}),
 
-	updateCompany: (id, updatedFields) => Company.findByIdAndUpdate(id, updatedFields, { new: true }),
+	updateRegistration: (id, updatedFields) => Registration.findByIdAndUpdate(id, updatedFields, { new: true }),
 
 })

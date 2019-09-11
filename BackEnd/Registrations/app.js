@@ -31,10 +31,10 @@ module.exports = Business.init().then((business) => {
 			res.status(400).json({ code: CustomError.errors.UNKNOWN, message: error.message })
 		}
 	})
-	const job = new CronJob('0 */1 * * * *', () => {
-		const d = new Date()
-		console.log('Every Tenth Minute:', d)
-	})
-	job.start()
+	// const job = new CronJob('0 */1 * * * *', () => {
+	// 	const d = new Date()
+	// 	console.log('Every Tenth Minute:', d)
+	// })
+	// job.start()
 	return app
 })

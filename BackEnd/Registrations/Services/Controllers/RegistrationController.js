@@ -37,26 +37,31 @@ const generateToken = (collection) => {
 	return responseToken
 }
 
-module.exports = ({ LocationLogic }) => ({
-	readLocations: (req, res, next) => {
+module.exports = ({ RegistrationLogic, LocationLogic }) => ({
+
+	createRegistration: (req, res, next) => RegistrationLogic.createRegistration(req.body)
+		.then(registration => res.json(registration))
+		.catch(next),
+
+	readRegistrations: (req, res, next) => {
 		const query = parseQuery(req.query)
-		return LocationLogic.getLocations(query)
-			.then((locations) => {
-				const responseToken = generateToken(locations)
-				res.json({ locations, token: responseToken })
+		return RegistrationLogic.getRegistrations(query)
+			.then((Registration) => {
+				const responseToken = generateToken(Registration)
+				res.json({ Registration, token: responseToken })
 			})
 			.catch(next)
 	},
 
-	updateLocation: (req, res, next) => LocationLogic.updateLocation(req.params.id, req.body)
-		.then(updatedLocation => res.json(updatedLocation))
+	updateRegistration: (req, res, next) => RegistrationLogic.updateRegistration(req.params.id, req.body)
+		.then(updatedRegistration => res.json(updatedRegistration))
 		.catch(next),
 
-	deleteLocation: (req, res, next) => LocationLogic.deleteLocation(req.params.id)
-		.then(location => res.json(location))
+	deleteRegistration: (req, res, next) => RegistrationLogic.deleteRegistration(req.params.id)
+		.then(registration => res.json(registration))
 		.catch(next),
 
-	readBatchLocations: (req, res, next) => LocationLogic.getBatchLocations(req.body.ids)
+	readBatchRegistrations: (req, res, next) => RegistrationLogic.getBatchRegistrations(req.body.ids)
 		.then(results => res.json(results))
 		.catch(next),
 

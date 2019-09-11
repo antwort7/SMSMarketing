@@ -1,7 +1,5 @@
-const CompanyValidator = require('./CompanyValidator')
-const LocationValidator = require('./LocationValidator')
+const RegistrationValidator = require('./RegistrationValidator')
 
 module.exports.init = persistence => ({
-	CompanyValidator: CompanyValidator.init(persistence),
-	LocationValidator: LocationValidator.init(persistence),
+	RegistrationValidator: RegistrationValidator.init(persistence),
 })

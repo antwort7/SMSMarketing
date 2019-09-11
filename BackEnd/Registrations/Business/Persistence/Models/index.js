@@ -1,7 +1,5 @@
-const Company = require('./Company')
-const Location = require('./Location')
+const Registration = require('./Registration')
 
 module.exports = {
-	Company,
-	Location,
+	Registration,
 }

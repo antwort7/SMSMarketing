@@ -1,11 +1,8 @@
-const CompanyOperations = require('./CompanyPersistence')
-const LocationOperations = require('./LocationPersistence')
+const RegistrationOperations = require('./RegistrationPersistence')
 
 module.exports.init = (models) => {
-	const CompanyPersistence = CompanyOperations(models)
-	const LocationPersistence = LocationOperations(models)
+	const RegistrationPersistence = RegistrationOperations(models)
 	return {
-		CompanyPersistence,
-		LocationPersistence,
+		RegistrationPersistence,
 	}
 }

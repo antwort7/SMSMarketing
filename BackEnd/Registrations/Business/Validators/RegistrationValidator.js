@@ -6,10 +6,12 @@ const Validator = require('./Validator')
 
 const DataLoaders = require('../DataLoaders')
 
-module.exports.init = () => ({
+const CustomError = require('../../CustomError')
+
+module.exports.init = ({ RegistrationPersistence }) => ({
 	create: Validator({
 		validators: {
-			verifyCompanyExistence: ({ company }) => DataLoaders.instance().companyLoader().load(company),
+
 		},
 	}),
 	getAll: Validator({
@@ -43,7 +45,7 @@ module.exports.init = () => ({
 					const regex = new RegExp(filter.search, 'i')
 					filter.$or = [
 						{ name: { $in: [regex] } },
-						// { document: { number: { $in: [regex] } } },
+						{ document: { number: { $in: [regex] } } },
 					]
 					delete filter.search
 				}
@@ -53,20 +55,12 @@ module.exports.init = () => ({
 	}),
 	update: Validator({
 		validators: {
-			verifyExistence: ({ id }) => DataLoaders.instance().locationLoader().load(id),
+			verifyExistence: ({ id }) => DataLoaders.instance().registrationLoader().load(id),
 		},
-		transformations: {
-			convertLocation: ({ location }) => {
-				if (location.address) {
-					location.address = { ...location.address, type : "Point" }
-				}
-				return Promise.resolve(location)
-			},
-		}
 	}),
 	delete: Validator({
 		validators: {
-			verifyExistence: ({ id }) => DataLoaders.instance().locationLoader().load(id),
+			verifyExistence: ({ id }) => DataLoaders.instance().registrationLoader().load(id),
 		},
 	}),
 })

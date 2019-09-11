@@ -1,18 +1,12 @@
-const Company = require('./Company')
-const Key = require('./Key')
-const Invoice = require('./Invoice')
+const Registration = require('./Registration')
 const User = require('./User')
 
-const company = Company({})
-const key = Key({})
-const invoice = Invoice({ Company: company.Models.Company, Location: company.Models.Location })
-const user = User({ Invoice: invoice.Models })
+const registration = Registration({})
+const user = User({})
 
 module.exports = {
 	Procedures: {
-		...company.Procedures,
-		...key.Procedures,
-		...invoice.Procedures,
+		...registration.Procedures,
 		...user.Procedures,
 	},
 	Types: { },

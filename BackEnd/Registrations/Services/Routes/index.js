@@ -1,7 +1,5 @@
-const CompanyRoutes = require('./Company')
-const LocationRoutes = require('./Location')
+const RegistrationRoutes = require('./Registration')
 
 module.exports = controllers => ({
-	companies: CompanyRoutes(controllers),
-	locations: LocationRoutes(controllers),
+	registrations: RegistrationRoutes(controllers),
 })
