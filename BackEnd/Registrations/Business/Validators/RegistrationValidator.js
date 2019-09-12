@@ -44,8 +44,9 @@ module.exports.init = ({ RegistrationPersistence }) => ({
 				if (filter.search) {
 					const regex = new RegExp(filter.search, 'i')
 					filter.$or = [
-						{ name: { $in: [regex] } },
-						{ document: { number: { $in: [regex] } } },
+						{ sender: { $in: [regex] } },
+						{ senderMessage: { $in: [regex] } },
+						{ recipientMessage: {  $in: [regex] } },
 					]
 					delete filter.search
 				}

@@ -48,7 +48,7 @@ module.exports.instance = () => getInstance()
 module.exports.init = () => {
 	const initialize = () => {
 		instance = {
-			registrationLoader: (error = true) => new DataLoader(keys => generateLoaderPath(process.env.REGISTRATION_SERVICE, '/Registration/batch')
+			registrationLoader: (error = true) => new DataLoader(keys => generateLoaderPath(process.env.REGISTRATION_SERVICE, '/registrations/batch')
 				.then(url => request({
 					method: 'POST',
 					uri: `${url}`,
