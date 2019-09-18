@@ -37,7 +37,6 @@ const getByIds = (model, ids, error = true, alternativeIds = []) => {
 
 let instance = {
 	registrationLoader: () => new Error('Registration loader not initialized'),
-	locationLoader: () => new Error('Location loader not initialized'),
 }
 
 const getInstance = () => {
@@ -49,11 +48,10 @@ const getInstance = () => {
 
 module.exports.instance = () => getInstance()
 
-module.exports.init = ({ Registration, Location }) => {
+module.exports.init = ({ Registration }) => {
 	const initialize = () => {
 		instance = {
-			registrationLoader: (error = true) => new DataLoader(keys => getByIds(Registration, keys, error, ['name'])),
-			locationLoader: (error = true) => new DataLoader(keys => getByIds(Location, keys, error)),
+			registrationLoader: (error = true) => new DataLoader(keys => getByIds(Registration, keys, error)),
 		}
 		return instance
 	}

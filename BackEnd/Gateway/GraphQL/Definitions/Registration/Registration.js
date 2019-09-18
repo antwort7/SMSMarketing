@@ -90,7 +90,7 @@ module.exports.Procedures = ({ Registration }, { Mutation, Query }) => ({
 					type: new GraphQLObjectType({
 						name: 'RegistrationAllResult',
 						fields: () => ({
-							Registration: {
+							registrations: {
 								type: GraphQLList(Registration.Model),
 							},
 							token: {

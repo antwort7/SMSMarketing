@@ -46,9 +46,9 @@ module.exports = ({ RegistrationLogic, LocationLogic }) => ({
 	readRegistrations: (req, res, next) => {
 		const query = parseQuery(req.query)
 		return RegistrationLogic.getRegistrations(query)
-			.then((Registration) => {
-				const responseToken = generateToken(Registration)
-				res.json({ Registration, token: responseToken })
+			.then((registrations) => {
+				const responseToken = generateToken(registrations)
+				res.json({ registrations, token: responseToken })
 			})
 			.catch(next)
 	},
