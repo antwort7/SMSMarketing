@@ -46,9 +46,15 @@ module.exports.init = ({ RegistrationPersistence }) => ({
 					filter.$or = [
 						{ sender: { $in: [regex] } },
 						{ senderMessage: { $in: [regex] } },
-						{ recipientMessage: {  $in: [regex] } },
+						{ recipientMessage: { $in: [regex] } },
 					]
 					delete filter.search
+				}
+				return Promise.resolve(filter)
+			},
+			convertDeliveryDate: (filter) => {
+				if (filter.deliveryDate) {
+					filter.deliveryDate = { $lte: new Date(filter.deliveryDate) }
 				}
 				return Promise.resolve(filter)
 			},

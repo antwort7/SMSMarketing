@@ -80,4 +80,6 @@ module.exports = ({ Registration }) => ({
 
 	updateRegistration: (id, updatedFields) => Registration.findByIdAndUpdate(id, updatedFields, { new: true }),
 
+	updateRegistrations: (ids, updatedFields) => Registration.update({ _id: { $in: ids } }, updatedFields, { new: true }),
+
 })

@@ -15,7 +15,7 @@
 		"express": "^4.16.2",
 		"flat": "^4.0.0",
 		"mongoose": "^5.1.4",
-		"cron-job": "^1.0.3"
+		"cron": "^1.7.2"
 	},
 	"devDependencies": {
 		"eslint": "^3.18.0",

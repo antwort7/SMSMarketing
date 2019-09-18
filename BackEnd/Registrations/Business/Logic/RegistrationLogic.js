@@ -17,6 +17,8 @@ module.exports = ({ RegistrationValidator }, { RegistrationPersistence }) => {
 		updateRegistration: (id, registration) => RegistrationValidator.update.validate({ id, registration })
 			.then(() => RegistrationPersistence.updateRegistration(id, registration)),
 
+		updateBatchRegistrations: (ids, update) => RegistrationPersistence.updateRegistrations(ids, update),
+
 		deleteRegistration: id => RegistrationValidator.delete.validate({ id })
 			.then(() => RegistrationPersistence.updateRegistration(id, { deleted: true })),
 
